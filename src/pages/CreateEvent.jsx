@@ -6,9 +6,11 @@ import { useSystem } from '../system/SystemProvider.jsx';
 import { EventMode } from '../../core/index.js';
 import { formatMinuteOfDay } from '../format.js';
 
-// Half-hour bounds are plenty for choosing a range; the grid itself is
-// 15-minute, matching When2Meet.
-const TIME_OPTIONS = Array.from({ length: 49 }, (_, i) => i * 30);
+// Hour-spaced bounds, as When2Meet does it. Half-hour steps meant a 48 item
+// menu that ran off the bottom of the screen, and the grid inside the range is
+// 15-minute regardless.
+const START_OPTIONS = Array.from({ length: 24 }, (_, i) => i * 60);
+const END_OPTIONS = Array.from({ length: 24 }, (_, i) => (i + 1) * 60);
 
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -118,10 +120,10 @@ export default function CreateEvent() {
                   onChange={(e) => {
                     const value = Number(e.target.value);
                     setStartMinute(value);
-                    if (value >= endMinute) setEndMinute(Math.min(1440, value + 60));
+                    if (value >= endMinute) setEndMinute(value + 60);
                   }}
                 >
-                  {TIME_OPTIONS.slice(0, 48).map((m) => (
+                  {START_OPTIONS.map((m) => (
                     <option key={m} value={m}>
                       {formatMinuteOfDay(m)}
                     </option>
@@ -136,7 +138,7 @@ export default function CreateEvent() {
                   value={endMinute}
                   onChange={(e) => setEndMinute(Number(e.target.value))}
                 >
-                  {TIME_OPTIONS.filter((m) => m > startMinute).map((m) => (
+                  {END_OPTIONS.filter((m) => m > startMinute).map((m) => (
                     <option key={m} value={m}>
                       {m === 1440 ? 'Midnight' : formatMinuteOfDay(m)}
                     </option>
