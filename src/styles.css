@@ -98,7 +98,7 @@ select {
 .page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 8px 16px calc(64px + env(safe-area-inset-bottom));
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
 }
 
 .page-wide {
@@ -112,8 +112,8 @@ select {
   position: sticky;
   top: 0;
   z-index: 20;
-  margin: 0 -16px 4px;
-  padding: 10px 16px;
+  margin: 0 -16px 2px;
+  padding: 7px 16px;
   background: var(--nav-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -136,6 +136,10 @@ select {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 46vw;
+  /* overflow:hidden clips vertically too, so leave room under the baseline
+     for descenders in names like "Friday hangout". */
+  line-height: 1.45;
+  padding-block: 1px;
 }
 
 .navbar.scrolled {
@@ -561,8 +565,8 @@ select {
 .toolbar {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 0.5px solid var(--separator);
 }
 
@@ -573,8 +577,16 @@ select {
   gap: 10px;
   background: var(--grouped-surface);
   border-radius: var(--radius-card);
-  padding: 9px 10px 9px 16px;
-  margin: 10px 0 18px;
+  padding: 8px 10px 8px 16px;
+  margin: 6px 0 12px;
+}
+
+.sharebar-label {
+  flex: none;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--label-secondary);
 }
 
 .share-url {
@@ -633,12 +645,12 @@ select {
   background: var(--fill);
   border-radius: 10px;
   padding: 11px 13px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   font-size: 13px;
   line-height: 1.4;
   color: var(--label-secondary);
   /* Fixed height on both panels is what keeps the two grids level. */
-  min-height: 64px;
+  min-height: 54px;
 }
 
 .readout-tag {
