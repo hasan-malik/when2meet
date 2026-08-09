@@ -1,0 +1,126 @@
+import { ScheduleGateway } from '../ports/schedule-gateway.js';
+import { AuthError, NotFoundError } from '../domain/errors.js';
+import { keepValidSlots, makeEvent } from '../domain/event.js';
+import {
+  grantSession,
+  hasSession,
+  identityKey,
+  makeParticipant,
+  normalizeName,
+  publicParticipant,
+} from '../domain/participant.js';
+
+/**
+ * The system's use cases, and the only place they live.
+ *
+ * Depends on the `EventRepository` and `CryptoProvider` abstractions, both
+ * injected — so this class runs identically inside a Netlify Function, an
+ * Express server, or a unit test with in-memory doubles.
+ *
+ * It implements `ScheduleGateway`, meaning a UI can be pointed straight at it
+ * with no HTTP in between.
+ */
+export class ScheduleService extends ScheduleGateway {
+  #repository;
+  #crypto;
+  #now;
+
+  constructor({ repository, crypto, now = () => Date.now() }) {
+    super();
+    this.#repository = repository;
+    this.#crypto = crypto;
+    this.#now = now;
+  }
+
+  async createEvent(input) {
+    const event = makeEvent(input, {
+      id: this.#crypto.randomId(10),
+      now: this.#now(),
+    });
+    await this.#repository.saveEvent(event);
+    return { event, participants: [] };
+  }
+
+  async getEvent(eventId) {
+    const event = await this.#requireEvent(eventId);
+    const participants = await this.#repository.listParticipants(eventId);
+    participants.sort((a, b) => a.createdAt - b.createdAt);
+    return { event, participants: participants.map(publicParticipant) };
+  }
+
+  async signIn(eventId, { name, password = '' } = {}) {
+    await this.#requireEvent(eventId);
+
+    const displayName = normalizeName(name);
+    const participantId = this.#participantId(displayName);
+    let participant = await this.#repository.findParticipant(eventId, participantId);
+
+    if (participant) {
+      if (participant.passwordHash && !password) {
+        throw new AuthError('That name is password protected.');
+      }
+      if (!this.#crypto.verifyPassword(password, participant.passwordHash)) {
+        throw new AuthError('Wrong password for that name.');
+      }
+      // Let someone who skipped a password originally add one later.
+      if (!participant.passwordHash && password) {
+        participant.passwordHash = this.#crypto.hashPassword(password);
+      }
+      // Keep the most recent capitalisation of the name.
+      participant.name = displayName;
+    } else {
+      participant = makeParticipant({
+        id: participantId,
+        name: displayName,
+        now: this.#now(),
+        passwordHash: password ? this.#crypto.hashPassword(password) : null,
+      });
+    }
+
+    const token = this.#crypto.randomToken();
+    grantSession(participant, this.#crypto.digest(token));
+    await this.#repository.saveParticipant(eventId, participant);
+
+    return { token, participant: publicParticipant(participant) };
+  }
+
+  async saveAvailability(eventId, credentials, slots) {
+    const event = await this.#requireEvent(eventId);
+    const participant = await this.#authenticate(eventId, credentials);
+
+    participant.slots = keepValidSlots(event, slots);
+    participant.updatedAt = this.#now();
+    await this.#repository.saveParticipant(eventId, participant);
+
+    return { participant: publicParticipant(participant) };
+  }
+
+  async leaveEvent(eventId, credentials) {
+    await this.#requireEvent(eventId);
+    const participant = await this.#authenticate(eventId, credentials);
+    await this.#repository.deleteParticipant(eventId, participant.id);
+    return { ok: true };
+  }
+
+  // --- internals ---------------------------------------------------------
+
+  #participantId(displayName) {
+    return this.#crypto.digest(identityKey(displayName)).slice(0, 24);
+  }
+
+  async #requireEvent(eventId) {
+    const event = await this.#repository.findEvent(String(eventId ?? ''));
+    if (!event) throw new NotFoundError('That event does not exist.');
+    return event;
+  }
+
+  async #authenticate(eventId, { participantId, token } = {}) {
+    if (!participantId || !token) throw new AuthError('Sign in first.');
+    const participant = await this.#repository.findParticipant(eventId, participantId);
+    if (!participant) throw new NotFoundError('That participant is no longer on the event.');
+    if (!hasSession(participant, this.#crypto.digest(token))) {
+      throw new AuthError('Session expired. Sign in again.');
+    }
+    return participant;
+  }
+}
