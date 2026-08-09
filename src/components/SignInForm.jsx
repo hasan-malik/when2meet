@@ -22,10 +22,6 @@ export default function SignInForm({ onSubmit }) {
 
   return (
     <form onSubmit={submit}>
-      <p className="panel-hint">
-        Enter your name to add your availability. Come back with the same name to edit it.
-      </p>
-
       <div className="group" style={{ marginBottom: 16 }}>
         <div className="group-body inset">
           <div className="row">
@@ -49,9 +45,6 @@ export default function SignInForm({ onSubmit }) {
               placeholder="Optional"
             />
           </div>
-        </div>
-        <div className="group-footer">
-          A password stops others editing your row. Leave blank to skip.
         </div>
       </div>
 
