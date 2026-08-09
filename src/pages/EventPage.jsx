@@ -32,6 +32,11 @@ export default function EventPage() {
   const [undoTo, setUndoTo] = useState(null);
   const undoTimer = useRef(null);
 
+  // Mirrors the draft's save state. It lives up here because useEventData
+  // below reads it, and the draft itself cannot be created until that fetch
+  // has returned the participants it needs.
+  const [draftState, setDraftState] = useState(SaveState.IDLE);
+
   // Pausing has to be tied to something that clears itself. An "is editing"
   // flag latched on and never came back, which silently killed live updates
   // from a person's first stroke onwards.
@@ -40,8 +45,6 @@ export default function EventPage() {
   const { status, event, participants, error, reload } = useEventData(eventId, {
     paused: saving,
   });
-
-  const [draftState, setDraftState] = useState(SaveState.IDLE);
 
   const remoteSlots = useMemo(
     () => participants.find((p) => p.id === session?.participantId)?.slots,
