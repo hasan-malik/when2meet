@@ -10,7 +10,6 @@ import { SaveState, useAvailabilityDraft } from '../hooks/useAvailabilityDraft.j
 import {
   attendanceAt,
   EventMode,
-  findBestWindows,
   projectSchedule,
   slotMinuteOfDay,
   slotStep,
@@ -26,7 +25,6 @@ export default function EventPage() {
   const { session, signIn, signOut } = useParticipantSession(eventId);
 
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
-  const [focusedPerson, setFocusedPerson] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const { status, event, participants, error, reload } = useEventData(eventId, {
@@ -66,7 +64,6 @@ export default function EventPage() {
     signOut();
     draft.reset([]);
     setIsEditing(false);
-    setFocusedPerson(null);
   }, [signOut, draft]);
 
   // Everyone's answers, with our own unsaved edits layered on top.
@@ -85,15 +82,6 @@ export default function EventPage() {
   const weekdaysOnly = event?.mode === EventMode.WEEKDAYS;
   const projection = useMemo(() => (event ? projectSchedule(event) : null), [event]);
   const tally = useMemo(() => tallyAvailability(people), [people]);
-  const best = useMemo(
-    () => (projection ? findBestWindows(projection.slots, tally, slotStep(event)) : null),
-    [projection, tally, event],
-  );
-
-  const focusedSlots = useMemo(() => {
-    const person = focusedPerson && people.find((p) => p.id === focusedPerson);
-    return person ? new Set(person.slots) : null;
-  }, [focusedPerson, people]);
 
   const hovered = useMemo(
     () => (hoveredSlot === undefined ? null : attendanceAt(tally, hoveredSlot, people)),
@@ -143,107 +131,44 @@ export default function EventPage() {
       <ShareBar />
 
       <div className="event-layout">
-        <div className="event-col">
-          <section>
-            <div className="panel-head">
-              <h2 className="panel-title">You</h2>
-              {session && <SaveBadge state={draft.saveState} />}
-            </div>
-            <div className="panel-body">
-              {session ? (
-                <>
-                  <p className="panel-hint">
-                    Drag to paint when you're free — it saves as you go.
-                  </p>
-                  <AvailabilityEditor
-                    projection={projection}
-                    selection={draft.slots}
-                    onCommit={commit}
-                    weekdaysOnly={weekdaysOnly}
-                  />
-                  <div className="toolbar">
-                    <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
-                      Select all
-                    </button>
-                    <button className="btn btn-sm" onClick={() => commit(new Set())}>
-                      Clear
-                    </button>
-                    <button
-                      className="btn btn-sm btn-destructive"
-                      style={{ marginLeft: 'auto' }}
-                      onClick={handleSignOut}
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <SignInForm onSubmit={handleSignIn} />
-              )}
-            </div>
-          </section>
-
-          <section>
-            <div className="panel-head">
-              <h2 className="panel-title">Respondents</h2>
-            </div>
-            <div className="panel-body">
-              {people.length ? (
-                <ul className="people">
-                  {people.map((person) => (
-                    <li key={person.id}>
-                      <button
-                        className={`person${focusedPerson === person.id ? ' active' : ''}`}
-                        onMouseEnter={() => setFocusedPerson(person.id)}
-                        onMouseLeave={() => setFocusedPerson(null)}
-                        onClick={() => setFocusedPerson((c) => (c === person.id ? null : person.id))}
-                      >
-                        <span className="person-name">
-                          {person.name}
-                          {session?.participantId === person.id && <em> · you</em>}
-                        </span>
-                        <span className="person-count">{person.slots.length}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted">Nobody has filled this in yet.</p>
-              )}
-            </div>
-          </section>
-
-          <section>
-            <div className="panel-head">
-              <h2 className="panel-title">Best times</h2>
-            </div>
-            <div className="panel-body">
-              {best && best.best > 0 ? (
-                <ol className="best-list">
-                  {best.windows.map((window, index) => (
-                    <li key={window.start}>
-                      <span className="best-rank">{index + 1}</span>
-                      <span>
-                        <span className="best-when">
-                          {formatWindow(
-                            window.start,
-                            slotMinuteOfDay(window.end) + best.step,
-                            { weekdaysOnly },
-                          )}
-                        </span>
-                        <span className="best-who">
-                          {window.count} of {total} available
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="muted">Best times appear once people respond.</p>
-              )}
-            </div>
-          </section>
-        </div>
+        <section>
+          <div className="panel-head">
+            <h2 className="panel-title">{session ? 'Your availability' : 'You'}</h2>
+            {session && <SaveBadge state={draft.saveState} />}
+          </div>
+          <div className="panel-body">
+            {session ? (
+              <>
+                <p className="panel-hint">
+                  Drag to paint when you're free — it saves as you go.
+                </p>
+                <AvailabilityEditor
+                  projection={projection}
+                  selection={draft.slots}
+                  onCommit={commit}
+                  weekdaysOnly={weekdaysOnly}
+                />
+                <div className="toolbar">
+                  <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
+                    Select all
+                  </button>
+                  <button className="btn btn-sm" onClick={() => commit(new Set())}>
+                    Clear
+                  </button>
+                  <button
+                    className="btn btn-sm btn-destructive"
+                    style={{ marginLeft: 'auto' }}
+                    onClick={handleSignOut}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <SignInForm onSubmit={handleSignIn} />
+            )}
+          </div>
+        </section>
 
         <section>
           <div className="panel-head">
@@ -299,7 +224,6 @@ export default function EventPage() {
               projection={projection}
               tally={tally}
               total={total}
-              focusedSlots={focusedSlots}
               onHoverSlot={setHoveredSlot}
               weekdaysOnly={weekdaysOnly}
             />
