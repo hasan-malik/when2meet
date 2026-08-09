@@ -6,9 +6,14 @@ import { useSystem } from '../system/SystemProvider.jsx';
 // finger feels like it saved instantly.
 const SAVE_DELAY_MS = 150;
 
+// A dropped connection is usually brief, so keep trying before giving up.
+const MAX_ATTEMPTS = 5;
+const RETRY_BASE_MS = 800;
+
 export const SaveState = Object.freeze({
   IDLE: 'idle',
   SAVING: 'saving',
+  RETRYING: 'retrying',
   SAVED: 'saved',
   FAILED: 'failed',
 });
@@ -34,6 +39,7 @@ export function useAvailabilityDraft({
   const dirtyRef = useRef(false);
   const latestRef = useRef(slots);
   const timerRef = useRef(null);
+  const attemptsRef = useRef(0);
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const ensureRef = useRef(ensureSession);
@@ -59,11 +65,29 @@ export function useAvailabilityDraft({
         await gateway.saveAvailability(eventId, current, next);
         if (latestRef.current === next) {
           dirtyRef.current = false;
+          attemptsRef.current = 0;
           setSaveState(SaveState.SAVED);
         }
       } catch (error) {
-        setSaveState(SaveState.FAILED);
-        if (error instanceof AuthError) onAuthLost?.(error);
+        // A rejected session will never succeed by trying again.
+        if (error instanceof AuthError) {
+          setSaveState(SaveState.FAILED);
+          onAuthLost?.(error);
+          return;
+        }
+        // Anything else is probably the network. Back off and try again, but
+        // only while this is still the newest selection — a later edit
+        // supersedes it and starts its own attempts.
+        const superseded = latestRef.current !== next;
+        if (!superseded && attemptsRef.current < MAX_ATTEMPTS) {
+          const delay = RETRY_BASE_MS * 2 ** attemptsRef.current;
+          attemptsRef.current += 1;
+          setSaveState(SaveState.RETRYING);
+          clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => push(next), delay);
+          return;
+        }
+        if (!superseded) setSaveState(SaveState.FAILED);
       }
     },
     [gateway, eventId, onAuthLost],
@@ -73,6 +97,7 @@ export function useAvailabilityDraft({
     (next) => {
       latestRef.current = next;
       dirtyRef.current = true;
+      attemptsRef.current = 0;
       setSlots(next);
       setSaveState(SaveState.SAVING);
       clearTimeout(timerRef.current);
@@ -83,20 +108,30 @@ export function useAvailabilityDraft({
 
   const flushNow = useCallback(() => {
     if (!dirtyRef.current) return;
+    const current = sessionRef.current;
+    if (!current) return; // never painted, nothing claimed yet
     clearTimeout(timerRef.current);
-    push(latestRef.current);
-  }, [push]);
+    gateway.saveOnUnload(eventId, current, latestRef.current);
+  }, [gateway, eventId]);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  // Best effort if the tab goes away mid-edit.
+  // The tab going away mid-edit must not lose the stroke.
   useEffect(() => {
+    const onHidden = () => {
+      if (document.visibilityState === 'hidden') flushNow();
+    };
     window.addEventListener('pagehide', flushNow);
-    return () => window.removeEventListener('pagehide', flushNow);
+    document.addEventListener('visibilitychange', onHidden);
+    return () => {
+      window.removeEventListener('pagehide', flushNow);
+      document.removeEventListener('visibilitychange', onHidden);
+    };
   }, [flushNow]);
 
   const reset = useCallback((next = []) => {
     dirtyRef.current = false;
+    attemptsRef.current = 0;
     const set = new Set(next);
     latestRef.current = set;
     setSlots(set);

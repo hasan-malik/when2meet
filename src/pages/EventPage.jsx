@@ -35,7 +35,8 @@ export default function EventPage() {
   // Pausing has to be tied to something that clears itself. An "is editing"
   // flag latched on and never came back, which silently killed live updates
   // from a person's first stroke onwards.
-  const saving = draftState === SaveState.SAVING;
+  const saving =
+    draftState === SaveState.SAVING || draftState === SaveState.RETRYING;
   const { status, event, participants, error, reload } = useEventData(eventId, {
     paused: saving,
   });
@@ -298,6 +299,7 @@ function SaveBadge({ state }) {
   if (state === SaveState.IDLE) return null;
   const label = {
     [SaveState.SAVING]: 'Saving',
+    [SaveState.RETRYING]: 'Reconnecting',
     [SaveState.SAVED]: 'Saved',
     [SaveState.FAILED]: 'Not saved',
   }[state];
