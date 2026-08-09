@@ -26,12 +26,12 @@ export default function Calendar({ selected, onChange }) {
 
   const paint = useCallback(
     (key) => {
-      const d = drag.current;
-      if (!d) return;
-      d.touched.add(key);
-      const next = new Set(d.base);
-      for (const k of d.touched) {
-        if (d.mode === 'add') next.add(k);
+      const state = drag.current;
+      if (!state) return;
+      state.touched.add(key);
+      const next = new Set(state.base);
+      for (const k of state.touched) {
+        if (state.mode === 'add') next.add(k);
         else next.delete(k);
       }
       onChange(next);
@@ -81,36 +81,38 @@ export default function Calendar({ selected, onChange }) {
         </div>
       </div>
 
-      <div className="calendar-grid">
+      <div className="calendar-weekdays">
         {WEEKDAYS.map((w, i) => (
-          <div className="calendar-weekday" key={i}>
-            {w}
-          </div>
+          <span key={i}>{w}</span>
         ))}
+      </div>
+
+      <div className="calendar-days">
         {monthMatrix(cursor.y, cursor.m).map((d, i) => {
-          if (d === null) return <div key={i} className="calendar-day empty" />;
+          if (d === null) return <span key={i} className="calendar-slot" />;
           const key = keyOf(cursor.y, cursor.m, d);
           return (
-            <button
-              type="button"
-              key={i}
-              aria-pressed={selected.has(key)}
-              className={[
-                'calendar-day',
-                selected.has(key) ? 'selected' : '',
-                key === todayKey ? 'today' : '',
-                key < todayKey ? 'past' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                start(key);
-              }}
-              onPointerEnter={() => drag.current && paint(key)}
-            >
-              {d}
-            </button>
+            <span key={i} className="calendar-slot">
+              <button
+                type="button"
+                aria-pressed={selected.has(key)}
+                className={[
+                  'calendar-day',
+                  selected.has(key) ? 'selected' : '',
+                  key === todayKey ? 'today' : '',
+                  key < todayKey ? 'past' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  start(key);
+                }}
+                onPointerEnter={() => drag.current && paint(key)}
+              >
+                {d}
+              </button>
+            </span>
           );
         })}
       </div>

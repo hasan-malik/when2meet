@@ -68,7 +68,7 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          <div className="group group-grow">
+          <div className="group">
             <div className="group-header group-header-row">
               <span>What days might work?</span>
               <div className="segmented">
@@ -89,7 +89,7 @@ export default function CreateEvent() {
               </div>
             </div>
 
-            <div className="group-body group-body-grow">
+            <div className="group-body">
               {weekly ? (
                 <WeekdayPicker selected={weekdays} onChange={setWeekdays} />
               ) : (

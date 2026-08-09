@@ -5,10 +5,12 @@
 :root {
   /* System colors — light */
   --blue: #007aff;
+  --blue-rgb: 0, 122, 255;
   --blue-pressed: #0062cc;
   --green: #34c759;
   --green-deep: #248a3d;
   --red: #ff3b30;
+  --red-rgb: 255, 59, 48;
 
   --label: #000000;
   --label-secondary: rgba(60, 60, 67, 0.6);
@@ -33,10 +35,12 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --blue: #0a84ff;
+    --blue-rgb: 10, 132, 255;
     --blue-pressed: #409cff;
     --green: #30d158;
     --green-deep: #30d158;
     --red: #ff453a;
+    --red-rgb: 255, 69, 58;
 
     --label: #ffffff;
     --label-secondary: rgba(235, 235, 245, 0.6);
@@ -363,7 +367,7 @@ select {
 
 /* --- calendar ---------------------------------------------------------- */
 .calendar {
-  padding: 6px 10px 12px;
+  padding: 8px 12px 12px;
   user-select: none;
 }
 
@@ -371,7 +375,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px;
+  padding: 4px 6px 10px;
 }
 
 .calendar-title {
@@ -400,41 +404,47 @@ select {
   opacity: 0.5;
 }
 
-.calendar-grid {
+.calendar-weekdays,
+.calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px 0;
 }
 
-.calendar-weekday {
+.calendar-weekdays {
+  padding-bottom: 6px;
+}
+
+.calendar-weekdays span {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
   color: var(--label-secondary);
-  padding-bottom: 6px;
 }
 
-.calendar-day {
-  position: relative;
-  aspect-ratio: 1;
-  max-height: 42px;
-  border: 0;
-  background: transparent;
-  color: var(--label);
-  font-size: 17px;
-  border-radius: 50%;
-  cursor: pointer;
-  touch-action: none;
+/* The cell is a flexible column; the button inside is a fixed circle, so a
+   wide column can never stretch it into an ellipse. */
+.calendar-slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
-  width: 100%;
-  transition: background 0.12s;
+  padding: 2px 0;
 }
 
-.calendar-day.empty {
-  cursor: default;
+.calendar-day {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--label);
+  font-size: 17px;
+  cursor: pointer;
+  touch-action: none;
+  transition: background 0.12s, color 0.12s;
 }
 
 .calendar-day.past {
@@ -447,14 +457,14 @@ select {
 }
 
 .calendar-day.selected {
-  background: var(--blue);
-  color: #fff;
+  background: rgba(var(--blue-rgb), 0.18);
+  color: var(--blue);
   font-weight: 600;
 }
 
 .calendar-day.selected.today {
-  background: var(--red);
-  color: #fff;
+  background: rgba(var(--red-rgb), 0.18);
+  color: var(--red);
 }
 
 /* --- event page -------------------------------------------------------- */
@@ -923,18 +933,6 @@ select {
   flex-direction: column;
 }
 
-.group-grow {
-  flex: 1;
-  min-height: 0;
-}
-
-.group-body-grow {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
 .group-header-row {
   display: flex;
   align-items: center;
@@ -946,7 +944,7 @@ select {
 }
 
 .create-actions {
-  margin-top: auto;
+  margin-top: 4px;
 }
 
 .create-note {
@@ -958,7 +956,7 @@ select {
 .weekday-picker {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   padding: 12px;
   user-select: none;
 }
@@ -976,8 +974,8 @@ select {
 }
 
 .weekday-chip.selected {
-  background: var(--blue);
-  color: #fff;
+  background: rgba(var(--blue-rgb), 0.18);
+  color: var(--blue);
   font-weight: 600;
 }
 
