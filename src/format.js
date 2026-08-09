@@ -48,5 +48,3 @@ export function formatWindow(startSlot, endMinuteExclusive, { weekdaysOnly = fal
   const to = formatMinuteOfDay(endMinuteExclusive);
   return `${label} · ${from} – ${to}`;
 }
-
-export const pluralize = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
