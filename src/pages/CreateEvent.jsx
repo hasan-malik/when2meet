@@ -51,25 +51,16 @@ export default function CreateEvent() {
 
   return (
     <div className="page page-create">
-      <div className="navbar">
-        <span className="navbar-title">Freetime</span>
-      </div>
-
-      <div className="create-head">
-        <h1 className="large-title">New event</h1>
-      </div>
-
       <form className="create-layout" onSubmit={submit}>
         <div className="create-col">
           <div className="group">
             <div className="group-body">
               <div className="row">
-                <span className="row-label">Name</span>
                 <input
-                  className="row-input"
+                  className="row-input row-input-title"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Team sync"
+                  placeholder="New Event Name"
                   maxLength={120}
                   autoFocus
                 />

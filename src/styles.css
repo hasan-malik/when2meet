@@ -236,6 +236,15 @@ select {
   text-align: left;
 }
 
+/* Lone event-name field: no label beside it, so it owns the row. */
+.row-input-title {
+  text-align: left;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  padding: 4px 0;
+}
+
 /* Native select styled as an iOS disclosure value */
 .row-select {
   appearance: none;
@@ -889,20 +898,8 @@ select {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  padding-top: 28px;
   padding-bottom: 24px;
-}
-
-.create-head {
-  padding-bottom: 4px;
-}
-
-.page-create .large-title {
-  font-size: 30px;
-  padding: 2px 0 0;
-}
-
-.page-create .subtitle {
-  margin-bottom: 14px;
 }
 
 .create-layout {
