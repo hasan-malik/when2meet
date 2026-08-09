@@ -9,6 +9,7 @@ import { useParticipantSession } from '../hooks/useParticipantSession.js';
 import { SaveState, useAvailabilityDraft } from '../hooks/useAvailabilityDraft.js';
 import {
   attendanceAt,
+  EventMode,
   findBestWindows,
   projectSchedule,
   slotDurationMs,
@@ -86,6 +87,7 @@ export default function EventPage() {
     return merged;
   }, [participants, session, draft.slots]);
 
+  const weekdaysOnly = event?.mode === EventMode.WEEKDAYS;
   const projection = useMemo(
     () => (event ? projectSchedule(event, displayTz) : null),
     [event, displayTz],
@@ -177,6 +179,7 @@ export default function EventPage() {
                   projection={projection}
                   selection={draft.slots}
                   onCommit={commit}
+                  weekdaysOnly={weekdaysOnly}
                 />
                 <div className="toolbar">
                   <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
@@ -218,6 +221,7 @@ export default function EventPage() {
                       hoveredSlot,
                       hoveredSlot + slotDurationMs(event),
                       displayTz,
+                      { weekdaysOnly },
                     )}
                   </div>
                   <div className="readout-row">
@@ -250,6 +254,7 @@ export default function EventPage() {
               total={total}
               focusedSlots={focusedSlots}
               onHoverSlot={setHoveredSlot}
+              weekdaysOnly={weekdaysOnly}
             />
           </div>
         </section>
@@ -300,7 +305,9 @@ export default function EventPage() {
                     <span className="best-rank">{index + 1}</span>
                     <span>
                       <span className="best-when">
-                        {formatWindow(window.start, window.end + best.slotMs, displayTz)}
+                        {formatWindow(window.start, window.end + best.slotMs, displayTz, {
+                          weekdaysOnly,
+                        })}
                       </span>
                       <span className="best-who">
                         {window.count} of {total} available

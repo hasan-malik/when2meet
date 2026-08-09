@@ -17,6 +17,8 @@
 // Entities and rules
 export {
   SLOT_SIZES,
+  EventMode,
+  WEEKDAY_ANCHOR,
   MAX_DATES,
   MAX_EVENT_NAME,
   MINUTES_PER_DAY,

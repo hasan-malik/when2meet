@@ -921,3 +921,114 @@ select {
 .group-body.inset {
   background: var(--fill);
 }
+
+/* --- create page: fits a laptop viewport without scrolling -------------- */
+.page-create {
+  max-width: 1080px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+
+.create-head {
+  padding-bottom: 4px;
+}
+
+.page-create .large-title {
+  font-size: 30px;
+  padding: 2px 0 0;
+}
+
+.page-create .subtitle {
+  margin-bottom: 14px;
+}
+
+.create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 26px;
+  flex: 1;
+  min-height: 0;
+}
+
+.create-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+
+.create-col .group {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-grow {
+  flex: 1;
+  min-height: 0;
+}
+
+.group-body-grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.group-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-transform: none;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.create-actions {
+  margin-top: auto;
+}
+
+.create-note {
+  text-align: center;
+  padding-top: 10px;
+}
+
+/* --- weekday picker ---------------------------------------------------- */
+.weekday-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  user-select: none;
+}
+
+.weekday-chip {
+  min-height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--label);
+  font-size: 17px;
+  cursor: pointer;
+  touch-action: none;
+  transition: background 0.12s;
+}
+
+.weekday-chip.selected {
+  background: var(--blue);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .page-create {
+    min-height: 0;
+  }
+  .create-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

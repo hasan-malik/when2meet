@@ -7,7 +7,14 @@ import { formatDateKey, formatMinuteOfDay } from '../format.js';
  * uses it (see AvailabilityEditor and GroupHeatmap).
  */
 const ScheduleGrid = forwardRef(function ScheduleGrid(
-  { projection, cellProps, interactive = false, use24h = false, ...containerProps },
+  {
+    projection,
+    cellProps,
+    interactive = false,
+    use24h = false,
+    weekdaysOnly = false,
+    ...containerProps
+  },
   ref,
 ) {
   const { columns, rows, slotAt, rowBreaks } = projection;
@@ -24,12 +31,19 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
         <div className="grid-corner" />
         {columns.map((dateKey) => {
           const { weekday, month, day } = formatDateKey(dateKey);
+          // A weekday event has no real dates, so only the day name is meaningful.
           return (
             <div className="grid-colhead" key={dateKey}>
-              <span className="colhead-weekday">{weekday}</span>
-              <span className="colhead-date">
-                {month} {day}
-              </span>
+              {weekdaysOnly ? (
+                <span className="colhead-date">{weekday}</span>
+              ) : (
+                <>
+                  <span className="colhead-weekday">{weekday}</span>
+                  <span className="colhead-date">
+                    {month} {day}
+                  </span>
+                </>
+              )}
             </div>
           );
         })}

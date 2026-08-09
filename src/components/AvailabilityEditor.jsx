@@ -3,7 +3,7 @@ import ScheduleGrid from './ScheduleGrid.jsx';
 import { useDragPaint } from '../hooks/useDragPaint.js';
 
 /** Your own grid: drag to paint the times you're free. */
-export default function AvailabilityEditor({ projection, selection, onCommit }) {
+export default function AvailabilityEditor({ projection, selection, onCommit, weekdaysOnly }) {
   const { containerRef, preview, handlers } = useDragPaint({
     projection,
     selection,
@@ -20,6 +20,7 @@ export default function AvailabilityEditor({ projection, selection, onCommit }) 
       ref={containerRef}
       projection={projection}
       cellProps={cellProps}
+      weekdaysOnly={weekdaysOnly}
       interactive
       onContextMenu={(e) => e.preventDefault()}
       {...handlers}

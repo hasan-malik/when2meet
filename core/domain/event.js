@@ -11,6 +11,33 @@ export const MAX_DATES = 60;
 export const MAX_EVENT_NAME = 120;
 export const MINUTES_PER_DAY = 1440;
 
+export const EventMode = Object.freeze({
+  DATES: 'dates',
+  WEEKDAYS: 'weekdays',
+});
+
+/**
+ * A "days of the week" event has no real dates, but it still has real
+ * durations and timezone behaviour. Rather than invent a second slot
+ * representation, weekday events are pinned to one canonical week and stay
+ * ordinary instants — so tallying, best-times, selection and timezone
+ * conversion all work untouched.
+ *
+ * The anchor week is Mon 1 – Sun 7 January 2024. Early January is chosen
+ * because no timezone changes its offset during it, and the days on either
+ * side (Sun 31 Dec, Mon 8 Jan) continue the same weekday cycle — so a viewer
+ * far enough east or west still sees correct weekday labels.
+ */
+export const WEEKDAY_ANCHOR = Object.freeze([
+  '2024-01-01', // Monday
+  '2024-01-02',
+  '2024-01-03',
+  '2024-01-04',
+  '2024-01-05',
+  '2024-01-06',
+  '2024-01-07', // Sunday
+]);
+
 /**
  * @typedef {object} Event
  * @property {string}   id
@@ -34,12 +61,18 @@ export function makeEvent(input, { id, now = Date.now() }) {
   if (!name) throw new ValidationError('Give the event a name.');
   if (name.length > MAX_EVENT_NAME) throw new ValidationError('That event name is too long.');
 
+  const mode = input?.mode === EventMode.WEEKDAYS ? EventMode.WEEKDAYS : EventMode.DATES;
+  const weekly = mode === EventMode.WEEKDAYS;
+  const noun = weekly ? 'day' : 'date';
+
   const rawDates = Array.isArray(input?.dates) ? [...new Set(input.dates)] : [];
-  if (rawDates.length === 0) throw new ValidationError('Pick at least one date.');
+  if (rawDates.length === 0) throw new ValidationError(`Pick at least one ${noun}.`);
   if (rawDates.length > MAX_DATES)
     throw new ValidationError(`Pick at most ${MAX_DATES} dates.`);
   if (!rawDates.every(isDateKey))
     throw new ValidationError('Dates must look like YYYY-MM-DD.');
+  if (weekly && !rawDates.every((d) => WEEKDAY_ANCHOR.includes(d)))
+    throw new ValidationError('Weekday events must use the anchor week.');
 
   const startMinute = toMinute(input?.startMinute, 'start time');
   const endMinute = toMinute(input?.endMinute, 'end time');
@@ -56,6 +89,7 @@ export function makeEvent(input, { id, now = Date.now() }) {
   return Object.freeze({
     id,
     name,
+    mode,
     dates: rawDates.sort(),
     startMinute,
     endMinute,

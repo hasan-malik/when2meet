@@ -12,6 +12,7 @@ export default function GroupHeatmap({
   total,
   focusedSlots,
   onHoverSlot,
+  weekdaysOnly,
 }) {
   const containerRef = useRef(null);
 
@@ -47,6 +48,7 @@ export default function GroupHeatmap({
       ref={containerRef}
       projection={projection}
       cellProps={cellProps}
+      weekdaysOnly={weekdaysOnly}
       onPointerMove={handleMove}
       onPointerLeave={() => onHoverSlot(undefined)}
     />

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar.jsx';
+import WeekdayPicker from '../components/WeekdayPicker.jsx';
 import { useSystem } from '../system/SystemProvider.jsx';
-import { SLOT_SIZES } from '../../core/index.js';
+import { EventMode, SLOT_SIZES } from '../../core/index.js';
 import {
   allTimeZones,
   formatMinuteOfDay,
@@ -18,7 +19,10 @@ export default function CreateEvent() {
   const { gateway } = useSystem();
 
   const [name, setName] = useState('');
+  const [mode, setMode] = useState(EventMode.DATES);
+  // Each mode keeps its own selection, so toggling back and forth is lossless.
   const [dates, setDates] = useState(() => new Set());
+  const [weekdays, setWeekdays] = useState(() => new Set());
   const [startMinute, setStartMinute] = useState(9 * 60);
   const [endMinute, setEndMinute] = useState(17 * 60);
   const [slotMinutes, setSlotMinutes] = useState(30);
@@ -26,8 +30,10 @@ export default function CreateEvent() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const sortedDates = useMemo(() => [...dates].sort(), [dates]);
-  const canSubmit = Boolean(name.trim()) && sortedDates.length > 0 && endMinute > startMinute;
+  const weekly = mode === EventMode.WEEKDAYS;
+  const chosen = weekly ? weekdays : dates;
+  const sorted = useMemo(() => [...chosen].sort(), [chosen]);
+  const canSubmit = Boolean(name.trim()) && sorted.length > 0 && endMinute > startMinute;
 
   async function submit(e) {
     e.preventDefault();
@@ -37,7 +43,8 @@ export default function CreateEvent() {
     try {
       const { event } = await gateway.createEvent({
         name,
-        dates: sortedDates,
+        mode,
+        dates: sorted,
         startMinute,
         endMinute,
         slotMinutes,
@@ -51,7 +58,7 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="page">
+    <div className="page page-create">
       <div className="navbar">
         <span className="brand">
           <span className="brand-mark" aria-hidden="true" />
@@ -59,119 +66,152 @@ export default function CreateEvent() {
         </span>
       </div>
 
-      <h1 className="large-title">New event</h1>
-      <p className="subtitle">Pick your dates, share the link, see when everyone is free.</p>
+      <div className="create-head">
+        <h1 className="large-title">New event</h1>
+        <p className="subtitle">Pick your dates, share the link, see when everyone is free.</p>
+      </div>
 
-      <form onSubmit={submit}>
-        <div className="group">
-          <div className="group-body">
-            <div className="row">
-              <span className="row-label">Name</span>
-              <input
-                className="row-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Team sync"
-                maxLength={120}
-                autoFocus
-              />
+      <form className="create-layout" onSubmit={submit}>
+        <div className="create-col">
+          <div className="group">
+            <div className="group-body">
+              <div className="row">
+                <span className="row-label">Name</span>
+                <input
+                  className="row-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Team sync"
+                  maxLength={120}
+                  autoFocus
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="group">
-          <div className="group-header">Dates</div>
-          <div className="group-body">
-            <Calendar selected={dates} onChange={setDates} />
-          </div>
-          <div className="group-footer">
-            {sortedDates.length
-              ? `${sortedDates.length} day${sortedDates.length === 1 ? '' : 's'} selected.`
-              : 'Tap days, or drag across several at once.'}
-          </div>
-        </div>
-
-        <div className="group">
-          <div className="group-header">Time range</div>
-          <div className="group-body">
-            <div className="row">
-              <span className="row-label">From</span>
-              <select
-                className="row-select"
-                value={startMinute}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setStartMinute(value);
-                  if (value >= endMinute) setEndMinute(Math.min(1440, value + 60));
-                }}
-              >
-                {TIME_OPTIONS.slice(0, 48).map((m) => (
-                  <option key={m} value={m}>
-                    {formatMinuteOfDay(m)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="row">
-              <span className="row-label">To</span>
-              <select
-                className="row-select"
-                value={endMinute}
-                onChange={(e) => setEndMinute(Number(e.target.value))}
-              >
-                {TIME_OPTIONS.filter((m) => m > startMinute).map((m) => (
-                  <option key={m} value={m}>
-                    {m === 1440 ? 'Midnight' : formatMinuteOfDay(m)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="row">
-              <span className="row-label">Slots</span>
+          <div className="group group-grow">
+            <div className="group-header group-header-row">
+              <span>What days might work?</span>
               <div className="segmented">
-                {SLOT_SIZES.map((size) => (
-                  <button
-                    type="button"
-                    key={size}
-                    aria-pressed={slotMinutes === size}
-                    onClick={() => setSlotMinutes(size)}
-                  >
-                    {size === 60 ? '1 hr' : `${size} min`}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  aria-pressed={!weekly}
+                  onClick={() => setMode(EventMode.DATES)}
+                >
+                  Dates
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={weekly}
+                  onClick={() => setMode(EventMode.WEEKDAYS)}
+                >
+                  Days of week
+                </button>
               </div>
             </div>
 
-            <div className="row">
-              <span className="row-label">Timezone</span>
-              <select
-                className="row-select"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {prettyZone(tz)}
-                  </option>
-                ))}
-              </select>
+            <div className="group-body group-body-grow">
+              {weekly ? (
+                <WeekdayPicker selected={weekdays} onChange={setWeekdays} />
+              ) : (
+                <Calendar selected={dates} onChange={setDates} />
+              )}
             </div>
-          </div>
-          <div className="group-footer">
-            Everyone sees these times in their own timezone.
+
+            <div className="group-footer">
+              {sorted.length
+                ? `${sorted.length} ${weekly ? 'day' : 'date'}${sorted.length === 1 ? '' : 's'} selected.`
+                : weekly
+                  ? 'Tap the days this should repeat on.'
+                  : 'Tap days, or drag across several at once.'}
+            </div>
           </div>
         </div>
 
-        {error && <p className="error-text">{error}</p>}
+        <div className="create-col">
+          <div className="group">
+            <div className="group-header">What times might work?</div>
+            <div className="group-body">
+              <div className="row">
+                <span className="row-label">No earlier than</span>
+                <select
+                  className="row-select"
+                  value={startMinute}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setStartMinute(value);
+                    if (value >= endMinute) setEndMinute(Math.min(1440, value + 60));
+                  }}
+                >
+                  {TIME_OPTIONS.slice(0, 48).map((m) => (
+                    <option key={m} value={m}>
+                      {formatMinuteOfDay(m)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <button className="btn btn-filled btn-block" disabled={!canSubmit || busy}>
-          {busy ? 'Creating…' : 'Create event'}
-        </button>
-        <p className="group-footer" style={{ textAlign: 'center', paddingTop: 12 }}>
-          No account needed — anyone with the link can add their availability.
-        </p>
+              <div className="row">
+                <span className="row-label">No later than</span>
+                <select
+                  className="row-select"
+                  value={endMinute}
+                  onChange={(e) => setEndMinute(Number(e.target.value))}
+                >
+                  {TIME_OPTIONS.filter((m) => m > startMinute).map((m) => (
+                    <option key={m} value={m}>
+                      {m === 1440 ? 'Midnight' : formatMinuteOfDay(m)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="row">
+                <span className="row-label">Slots</span>
+                <div className="segmented">
+                  {SLOT_SIZES.map((size) => (
+                    <button
+                      type="button"
+                      key={size}
+                      aria-pressed={slotMinutes === size}
+                      onClick={() => setSlotMinutes(size)}
+                    >
+                      {size === 60 ? '1 hr' : `${size} min`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="row">
+                <span className="row-label">Timezone</span>
+                <select
+                  className="row-select"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                >
+                  {TIMEZONES.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {prettyZone(tz)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="group-footer">
+              Everyone sees these times in their own timezone.
+            </div>
+          </div>
+
+          <div className="create-actions">
+            {error && <p className="error-text">{error}</p>}
+            <button className="btn btn-filled btn-block" disabled={!canSubmit || busy}>
+              {busy ? 'Creating…' : 'Create event'}
+            </button>
+            <p className="group-footer create-note">
+              No account needed — anyone with the link can add their availability.
+            </p>
+          </div>
+        </div>
       </form>
     </div>
   );

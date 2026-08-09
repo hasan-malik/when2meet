@@ -49,15 +49,18 @@ const timeOnly = (ts, timeZone) =>
     minute: '2-digit',
   }).format(new Date(ts));
 
-/** e.g. "Sat, Aug 15 · 2:00 PM – 3:30 PM" */
-export function formatWindow(start, endExclusive, timeZone) {
+/**
+ * e.g. "Sat, Aug 15 · 2:00 PM – 3:30 PM", or "Saturdays · 2:00 PM – 3:30 PM"
+ * for an event surveyed by day of the week, where the date is meaningless.
+ */
+export function formatWindow(start, endExclusive, timeZone, { weekdaysOnly = false } = {}) {
   const day = new Intl.DateTimeFormat('en-US', {
     timeZone,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
+    weekday: weekdaysOnly ? 'long' : 'short',
+    ...(weekdaysOnly ? {} : { month: 'short', day: 'numeric' }),
   }).format(new Date(start));
-  return `${day} · ${timeOnly(start, timeZone)} – ${timeOnly(endExclusive, timeZone)}`;
+  const label = weekdaysOnly ? `${day}s` : day;
+  return `${label} · ${timeOnly(start, timeZone)} – ${timeOnly(endExclusive, timeZone)}`;
 }
 
 export const pluralize = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
