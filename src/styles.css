@@ -1087,11 +1087,6 @@ select {
 /* Pushes the identity controls to the far end of the toolbar */
 .toolbar-gap { flex: 1; }
 
-.btn-undo {
-  background: var(--blue);
-  color: #fff;
-}
-
 .save-badge.retrying {
   color: var(--rough, var(--label-secondary));
 }
