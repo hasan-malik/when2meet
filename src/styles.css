@@ -361,12 +361,6 @@ select {
   color: var(--red);
 }
 
-/* Cancel dismisses, it does not act and it destroys nothing — so neither the
-   blue of an offered action nor the red of a destructive one. */
-.btn-quiet {
-  color: var(--label-secondary);
-}
-
 /* --- segmented control ------------------------------------------------- */
 .segmented {
   display: inline-flex;
