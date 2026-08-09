@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Alert from '../components/Alert.jsx';
 import Calendar from '../components/Calendar.jsx';
 import WeekdayPicker from '../components/WeekdayPicker.jsx';
 import { useSystem } from '../system/SystemProvider.jsx';
@@ -24,18 +25,34 @@ export default function CreateEvent() {
   const [startMinute, setStartMinute] = useState(9 * 60);
   const [endMinute, setEndMinute] = useState(17 * 60);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [alert, setAlert] = useState('');
 
   const weekly = mode === EventMode.WEEKDAYS;
   const chosen = weekly ? weekdays : dates;
   const sorted = useMemo(() => [...chosen].sort(), [chosen]);
-  const canSubmit = sorted.length > 0 && endMinute > startMinute;
+
+  /** The first thing standing in the way, or null when nothing is. */
+  function whatIsMissing() {
+    if (sorted.length === 0) {
+      return weekly
+        ? 'You must select at least one day.'
+        : 'You must select at least one date.';
+    }
+    if (endMinute <= startMinute) return 'The end time must be after the start time.';
+    return null;
+  }
 
   async function submit(e) {
     e.preventDefault();
-    if (!canSubmit || busy) return;
+    if (busy) return;
+
+    const missing = whatIsMissing();
+    if (missing) {
+      setAlert(missing);
+      return;
+    }
+
     setBusy(true);
-    setError('');
     try {
       const { event } = await gateway.createEvent({
         name,
@@ -46,7 +63,7 @@ export default function CreateEvent() {
       });
       navigate(`/e/${event.id}`);
     } catch (err) {
-      setError(err.message);
+      setAlert(err.message);
       setBusy(false);
     }
   }
@@ -150,18 +167,15 @@ export default function CreateEvent() {
           </div>
 
           <div className="create-actions">
-            {error && <p className="error-text">{error}</p>}
-            <button className="btn btn-filled btn-block" disabled={!canSubmit || busy}>
+            <button className="btn btn-filled btn-block" disabled={busy}>
               {busy ? 'Creating…' : 'Create event'}
             </button>
-            <p className="group-footer create-note">
-              {sorted.length === 0
-                ? `Pick at least one ${weekly ? 'day' : 'date'}.`
-                : 'No account needed.'}
-            </p>
+            <p className="group-footer create-note">No account needed.</p>
           </div>
         </div>
       </form>
+
+      {alert && <Alert message={alert} onClose={() => setAlert('')} />}
     </div>
   );
 }

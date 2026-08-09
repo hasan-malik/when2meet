@@ -1029,3 +1029,71 @@ select {
 .save-badge.retrying .save-dot {
   animation: pulse 1s ease-in-out infinite;
 }
+
+/* --- iOS alert ---------------------------------------------------------- */
+.alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: alert-fade 0.14s ease-out;
+}
+
+.alert {
+  width: 272px;
+  max-width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--grouped-surface);
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  animation: alert-pop 0.16s ease-out;
+}
+
+.alert-message {
+  margin: 0;
+  padding: 20px 18px 16px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--label);
+}
+
+.alert-action {
+  width: 100%;
+  border: 0;
+  border-top: 0.5px solid var(--separator);
+  background: transparent;
+  color: var(--blue);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.alert-action:active {
+  background: var(--fill);
+}
+
+.alert-action:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -3px;
+}
+
+@keyframes alert-fade {
+  from { opacity: 0; }
+}
+
+@keyframes alert-pop {
+  from { opacity: 0; transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-backdrop,
+  .alert { animation: none; }
+}
