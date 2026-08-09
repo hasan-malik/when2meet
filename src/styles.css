@@ -572,14 +572,6 @@ select {
   margin-left: auto;
 }
 
-.toolbar {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 0.5px solid var(--separator);
-}
-
 /* Share sheet-ish row */
 .sharebar {
   display: flex;
@@ -1077,18 +1069,16 @@ select {
   }
 }
 
-/* Inline name form, revealed from the availability toolbar */
+/* Inline name form, revealed from the heading row */
 .name-form {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 0.5px solid var(--separator);
 }
 
-/* Pushes the identity controls to the far end of the toolbar */
-.toolbar-gap { flex: 1; }
-
+/* --rough never existed in this stylesheet; the fallback was doing the work. */
 .save-badge.retrying {
-  color: var(--rough, var(--label-secondary));
+  color: var(--label-secondary);
 }
 .save-badge.retrying .save-dot {
   animation: pulse 1s ease-in-out infinite;
