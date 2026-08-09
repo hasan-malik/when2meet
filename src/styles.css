@@ -1014,3 +1014,18 @@ select {
   padding-top: 14px;
   border-top: 0.5px solid var(--separator);
 }
+
+/* Pushes the identity controls to the far end of the toolbar */
+.toolbar-gap { flex: 1; }
+
+.btn-undo {
+  background: var(--blue);
+  color: #fff;
+}
+
+.save-badge.retrying {
+  color: var(--rough, var(--label-secondary));
+}
+.save-badge.retrying .save-dot {
+  animation: pulse 1s ease-in-out infinite;
+}

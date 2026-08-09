@@ -141,6 +141,11 @@ export class ScheduleService extends ScheduleGateway {
     return { participant: publicParticipant(participant) };
   }
 
+  /** In-process there is no page to lose, so this is an ordinary save. */
+  saveOnUnload(eventId, credentials, slots) {
+    return this.saveAvailability(eventId, credentials, slots);
+  }
+
   async leaveEvent(eventId, credentials) {
     await this.#requireEvent(eventId);
     const participant = await this.#authenticate(eventId, credentials);

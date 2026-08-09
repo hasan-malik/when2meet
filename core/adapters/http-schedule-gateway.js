@@ -54,6 +54,23 @@ export class HttpScheduleGateway extends ScheduleGateway {
     });
   }
 
+  saveOnUnload(eventId, { participantId, token }, slots) {
+    const payload = JSON.stringify({ participantId, token, slots: [...slots] });
+    const url = `${this.#baseUrl}/events/${encodeURIComponent(eventId)}/availability`;
+    // sendBeacon is queued by the browser and outlives the document; it always
+    // POSTs, which is why the API accepts POST here as well as PUT.
+    if (navigator.sendBeacon?.(url, new Blob([payload], { type: 'application/json' }))) {
+      return;
+    }
+    // No beacon support: a keepalive fetch is the next best thing.
+    this.#fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  }
+
   async #send(method, path, body) {
     let response;
     try {

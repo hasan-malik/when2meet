@@ -48,6 +48,16 @@ export class ScheduleGateway {
   async saveAvailability(eventId, { participantId, token }, slots) {
     throw notImplemented('saveAvailability');
   }
+
+  /**
+   * Save while the page is being torn down. Implementations must hand the
+   * write to something that outlives the document — a normal request is
+   * routinely cancelled on navigation. Fire-and-forget: no result is available
+   * to report, because nothing will be around to read it.
+   */
+  saveOnUnload(eventId, { participantId, token }, slots) {
+    throw notImplemented('saveOnUnload');
+  }
 }
 
 const notImplemented = (method) =>

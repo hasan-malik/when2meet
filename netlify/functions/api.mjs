@@ -78,7 +78,9 @@ async function route(req, [resource, eventId, action]) {
       return json(await api.joinAnonymously(eventId));
     case 'POST rename':
       return json(await api.renameParticipant(eventId, body, body.name));
+    // POST as well as PUT: sendBeacon can only issue POST.
     case 'PUT availability':
+    case 'POST availability':
       return json(await api.saveAvailability(eventId, body, body.slots));
     case 'POST leave':
       return json(await api.leaveEvent(eventId, body));

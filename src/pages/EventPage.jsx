@@ -20,6 +20,8 @@ import { formatWindow, pluralize } from '../format.js';
 // Shown in place of a name the organiser chose not to give.
 const UNTITLED = 'Untitled event';
 
+// How long Select all / Clear stay reversible.
+const UNDO_WINDOW_MS = 8000;
 
 export default function EventPage() {
   const { eventId } = useParams();
@@ -27,6 +29,8 @@ export default function EventPage() {
 
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
   const [naming, setNaming] = useState(false);
+  const [undoTo, setUndoTo] = useState(null);
+  const undoTimer = useRef(null);
 
   // Pausing has to be tied to something that clears itself. An "is editing"
   // flag latched on and never came back, which silently killed live updates
@@ -57,6 +61,28 @@ export default function EventPage() {
 
   const commit = draft.commit;
 
+  /**
+   * Select all and Clear rewrite the whole grid in one click, so they keep the
+   * previous selection around long enough to change your mind.
+   */
+  const bulkCommit = useCallback(
+    (next) => {
+      setUndoTo(new Set(draft.slots));
+      clearTimeout(undoTimer.current);
+      undoTimer.current = setTimeout(() => setUndoTo(null), UNDO_WINDOW_MS);
+      commit(next);
+    },
+    [draft.slots, commit],
+  );
+
+  const undo = useCallback(() => {
+    if (!undoTo) return;
+    clearTimeout(undoTimer.current);
+    commit(new Set(undoTo));
+    setUndoTo(null);
+  }, [undoTo, commit]);
+
+  useEffect(() => () => clearTimeout(undoTimer.current), []);
 
   // Naming yourself means renaming the row your painting already created, or
   // signing in properly if you have not painted anything yet.
@@ -78,6 +104,7 @@ export default function EventPage() {
     signOut();
     draft.reset([]);
     setNaming(false);
+    setUndoTo(null);
   }, [signOut, draft]);
 
   // Everyone's answers, with our own unsaved edits layered on top.
@@ -165,27 +192,31 @@ export default function EventPage() {
             />
 
             <div className="toolbar">
-              <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
+              <button
+                className="btn btn-sm"
+                onClick={() => bulkCommit(new Set(projection.slots))}
+              >
                 Select all
               </button>
-              <button className="btn btn-sm" onClick={() => commit(new Set())}>
+              <button className="btn btn-sm" onClick={() => bulkCommit(new Set())}>
                 Clear
               </button>
-              {session && !session.anonymous ? (
-                <button
-                  className="btn btn-sm btn-destructive"
-                  style={{ marginLeft: 'auto' }}
-                  onClick={handleSignOut}
-                >
-                  Sign out
+              {undoTo && (
+                <button className="btn btn-sm btn-undo" onClick={undo}>
+                  Undo
                 </button>
-              ) : (
-                <button
-                  className="btn btn-sm"
-                  style={{ marginLeft: 'auto' }}
-                  onClick={() => setNaming((open) => !open)}
-                >
+              )}
+
+              <span className="toolbar-gap" />
+
+              {(!session || session.anonymous) && (
+                <button className="btn btn-sm" onClick={() => setNaming((open) => !open)}>
                   {naming ? 'Cancel' : 'Add your name'}
+                </button>
+              )}
+              {session && (
+                <button className="btn btn-sm btn-destructive" onClick={handleSignOut}>
+                  {session.anonymous ? 'Not me' : 'Sign out'}
                 </button>
               )}
             </div>
