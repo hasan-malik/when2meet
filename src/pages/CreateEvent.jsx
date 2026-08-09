@@ -155,7 +155,9 @@ export default function CreateEvent() {
               {busy ? 'Creating…' : 'Create event'}
             </button>
             <p className="group-footer create-note">
-              No account needed.
+              {sorted.length === 0
+                ? `Pick at least one ${weekly ? 'day' : 'date'}.`
+                : 'No account needed.'}
             </p>
           </div>
         </div>
