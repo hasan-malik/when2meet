@@ -225,7 +225,10 @@ export default function EventPage() {
 
           <div className="panel-actions">
             {(!session || session.anonymous) && (
-              <button className="btn btn-sm" onClick={() => setNaming((open) => !open)}>
+              <button
+                className={`btn btn-sm${naming ? ' btn-quiet' : ''}`}
+                onClick={() => setNaming((open) => !open)}
+              >
                 {naming ? 'Cancel' : 'Add your name'}
               </button>
             )}
