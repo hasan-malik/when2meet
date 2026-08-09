@@ -162,7 +162,10 @@ export default function EventPage() {
               <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
                 Select all
               </button>
-              <button className="btn btn-sm" onClick={() => commit(new Set())}>
+              <button
+                className="btn btn-sm btn-destructive"
+                onClick={() => commit(new Set())}
+              >
                 Clear
               </button>
               <SaveBadge state={draft.saveState} />
