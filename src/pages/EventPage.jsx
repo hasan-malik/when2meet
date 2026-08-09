@@ -163,6 +163,16 @@ export default function EventPage() {
     <div className="page page-wide">
       <div className="navbar">
         <Link to="/" className="back-link">
+          <svg className="back-chevron" viewBox="0 0 12 20" aria-hidden="true">
+            <path
+              d="M10.5 1.75 2.25 10l8.25 8.25"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           New
         </Link>
         <h1 className="navbar-heading">{event.name || UNTITLED}</h1>
@@ -183,6 +193,42 @@ export default function EventPage() {
                 ? `Saving as ${session.name}. Drag to paint when you're free — it saves as you go.`
                 : "Drag to paint when you're free. No sign-in needed — your first square saves you in."}
             </div>
+
+            {hovered && (
+              <div className="hover-panel">
+                <div className="hover-panel-time">
+                  {formatWindow(
+                    hoveredSlot,
+                    slotMinuteOfDay(hoveredSlot) + slotStep(event),
+                    { weekdaysOnly },
+                  )}
+                </div>
+                <div className="hover-panel-lists">
+                  <div className="hover-panel-list">
+                    <span className="readout-tag available">
+                      Free {hovered.available.length}
+                    </span>
+                    <ul>
+                      {hovered.available.length ? (
+                        hovered.available.map((p) => <li key={p.id}>{p.name}</li>)
+                      ) : (
+                        <li className="muted">Nobody</li>
+                      )}
+                    </ul>
+                  </div>
+                  <div className="hover-panel-list">
+                    <span className="readout-tag">Busy {hovered.unavailable.length}</span>
+                    <ul>
+                      {hovered.unavailable.length ? (
+                        hovered.unavailable.map((p) => <li key={p.id}>{p.name}</li>)
+                      ) : (
+                        <li className="muted">Nobody</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <AvailabilityEditor
               projection={projection}
@@ -240,37 +286,9 @@ export default function EventPage() {
           </div>
           <div className="panel-body">
             <div className="panel-note">
-              {hovered ? (
-                <>
-                  <div className="readout-time">
-                    {formatWindow(
-                      hoveredSlot,
-                      slotMinuteOfDay(hoveredSlot) + slotStep(event),
-                      { weekdaysOnly },
-                    )}
-                  </div>
-                  <div className="readout-row">
-                    <span className="readout-tag available">
-                      Free {hovered.available.length}
-                    </span>
-                    <span className="readout-names">
-                      {hovered.available.map((p) => p.name).join(', ') || '—'}
-                    </span>
-                  </div>
-                  <div className="readout-row">
-                    <span className="readout-tag">Busy {hovered.unavailable.length}</span>
-                    <span className="readout-names muted">
-                      {hovered.unavailable.map((p) => p.name).join(', ') || '—'}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <span className="muted">
-                  {total
-                    ? 'Hover a square to see who can make it. This grid is read only — yours is on the left.'
-                    : 'Nobody has answered yet. Share the link above.'}
-                </span>
-              )}
+              {total
+                ? 'Hover a square to see who can make it, over on the left. This grid is read only — yours is on the left too.'
+                : 'Nobody has answered yet. Share the link above.'}
             </div>
 
             <GroupHeatmap

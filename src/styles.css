@@ -164,17 +164,20 @@ select {
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   color: var(--blue);
   text-decoration: none;
   font-size: 17px;
+  line-height: 1;
 }
 
-.back-link::before {
-  content: '‹';
-  font-size: 26px;
-  line-height: 0.8;
-  font-weight: 500;
+/* Drawn rather than typed: the ‹ glyph sits on a text baseline and shifts
+   with the font, so it never lined up with the label beside it. */
+.back-chevron {
+  width: 10px;
+  height: 17px;
+  flex: none;
+  display: block;
 }
 
 /* --- inset grouped list ------------------------------------------------ */
@@ -499,9 +502,51 @@ select {
 }
 
 .panel-body {
+  position: relative;
   background: var(--grouped-surface);
   border-radius: var(--radius-card);
   padding: 16px;
+}
+
+/* Hovering the group grid takes over this panel rather than pushing anything
+   around. It is absolutely placed so the layout cannot shift by a pixel. */
+.hover-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--grouped-surface);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.hover-panel-time {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--label);
+}
+
+.hover-panel-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-content: start;
+}
+
+.hover-panel-list ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+  color: var(--label);
+  overflow-wrap: anywhere;
 }
 
 .panel-head {
@@ -596,19 +641,6 @@ select {
   min-height: 64px;
 }
 
-.readout-time {
-  font-weight: 600;
-  font-size: 15px;
-  margin-bottom: 5px;
-  letter-spacing: -0.01em;
-}
-
-.readout-row {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
 .readout-tag {
   flex: none;
   font-size: 11px;
@@ -620,11 +652,6 @@ select {
 
 .readout-tag.available {
   color: var(--green-deep);
-}
-
-.readout-names {
-  color: var(--label);
-  min-width: 0;
 }
 
 .legend {
@@ -710,6 +737,12 @@ select {
   line-height: 1;
   transform: translateY(-0.5em);
   white-space: nowrap;
+}
+
+.grid-rowlabel.first-label {
+  /* Row zero has no row above it to overhang into, so it stays put rather
+     than being shifted up and clipped. */
+  transform: none;
 }
 
 .grid-cell {

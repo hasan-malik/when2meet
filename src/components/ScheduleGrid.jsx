@@ -55,7 +55,7 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
           const onTheHour = minuteOfDay % 60 === 0;
           return (
             <Fragment key={minuteOfDay}>
-              <div className="grid-rowlabel">
+              <div className={`grid-rowlabel${row === 0 ? ' first-label' : ''}`}>
                 {onTheHour || row === 0 ? formatMinuteOfDay(minuteOfDay, use24h) : ''}
               </div>
 
