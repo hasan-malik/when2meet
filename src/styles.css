@@ -1007,3 +1007,10 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Inline name form, revealed from the availability toolbar */
+.name-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--separator);
+}

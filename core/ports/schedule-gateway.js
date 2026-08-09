@@ -31,6 +31,19 @@ export class ScheduleGateway {
     throw notImplemented('signIn');
   }
 
+  /**
+   * Join with no name at all, taking the next free animal label.
+   * @returns {Promise<{token: string, participant: object}>}
+   */
+  async joinAnonymously(eventId) {
+    throw notImplemented('joinAnonymously');
+  }
+
+  /** Put a name to an anonymous row. @returns {Promise<{participant: object}>} */
+  async renameParticipant(eventId, { participantId, token }, name) {
+    throw notImplemented('renameParticipant');
+  }
+
   /** @returns {Promise<{participant: object}>} */
   async saveAvailability(eventId, { participantId, token }, slots) {
     throw notImplemented('saveAvailability');

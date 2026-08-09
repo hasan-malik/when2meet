@@ -22,10 +22,11 @@ const UNTITLED = 'Untitled event';
 
 export default function EventPage() {
   const { eventId } = useParams();
-  const { session, signIn, signOut } = useParticipantSession(eventId);
+  const { session, signIn, joinAnonymously, rename, signOut } = useParticipantSession(eventId);
 
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
   const [isEditing, setIsEditing] = useState(false);
+  const [naming, setNaming] = useState(false);
 
   const { status, event, participants, error, reload } = useEventData(eventId, {
     paused: isEditing,
@@ -41,6 +42,7 @@ export default function EventPage() {
     session,
     remoteSlots,
     onAuthLost: signOut,
+    ensureSession: joinAnonymously,
   });
 
   const commit = useCallback(
@@ -51,19 +53,27 @@ export default function EventPage() {
     [draft],
   );
 
-  const handleSignIn = useCallback(
+  // Naming yourself means renaming the row your painting already created, or
+  // signing in properly if you have not painted anything yet.
+  const handleClaimName = useCallback(
     async (name, password) => {
-      const participant = await signIn(name, password);
-      draft.reset(participant.slots);
+      if (session?.anonymous) {
+        await rename(name);
+      } else {
+        const participant = await signIn(name, password);
+        draft.reset(participant.slots);
+      }
+      setNaming(false);
       reload();
     },
-    [signIn, draft, reload],
+    [session, rename, signIn, draft, reload],
   );
 
   const handleSignOut = useCallback(() => {
     signOut();
     draft.reset([]);
     setIsEditing(false);
+    setNaming(false);
   }, [signOut, draft]);
 
   // Everyone's answers, with our own unsaved edits layered on top.
@@ -133,39 +143,53 @@ export default function EventPage() {
       <div className="event-layout">
         <section>
           <div className="panel-head">
-            <h2 className="panel-title">{session ? 'Your availability' : 'You'}</h2>
-            {session && <SaveBadge state={draft.saveState} />}
+            <h2 className="panel-title">Your availability</h2>
+            <SaveBadge state={draft.saveState} />
           </div>
           <div className="panel-body">
-            {session ? (
-              <>
-                <p className="panel-hint">
-                  Drag to paint when you're free — it saves as you go.
-                </p>
-                <AvailabilityEditor
-                  projection={projection}
-                  selection={draft.slots}
-                  onCommit={commit}
-                  weekdaysOnly={weekdaysOnly}
-                />
-                <div className="toolbar">
-                  <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
-                    Select all
-                  </button>
-                  <button className="btn btn-sm" onClick={() => commit(new Set())}>
-                    Clear
-                  </button>
-                  <button
-                    className="btn btn-sm btn-destructive"
-                    style={{ marginLeft: 'auto' }}
-                    onClick={handleSignOut}
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </>
-            ) : (
-              <SignInForm onSubmit={handleSignIn} />
+            <p className="panel-hint">
+              {session
+                ? `Saving as ${session.name}.`
+                : "Drag to paint when you're free. No sign-in needed — it saves as you go."}
+            </p>
+
+            <AvailabilityEditor
+              projection={projection}
+              selection={draft.slots}
+              onCommit={commit}
+              weekdaysOnly={weekdaysOnly}
+            />
+
+            <div className="toolbar">
+              <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
+                Select all
+              </button>
+              <button className="btn btn-sm" onClick={() => commit(new Set())}>
+                Clear
+              </button>
+              {session && !session.anonymous ? (
+                <button
+                  className="btn btn-sm btn-destructive"
+                  style={{ marginLeft: 'auto' }}
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              ) : (
+                <button
+                  className="btn btn-sm"
+                  style={{ marginLeft: 'auto' }}
+                  onClick={() => setNaming((open) => !open)}
+                >
+                  {naming ? 'Cancel' : 'Add your name'}
+                </button>
+              )}
+            </div>
+
+            {naming && (
+              <div className="name-form">
+                <SignInForm onSubmit={handleClaimName} submitLabel="Save name" />
+              </div>
             )}
           </div>
         </section>

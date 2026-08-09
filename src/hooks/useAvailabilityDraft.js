@@ -20,7 +20,13 @@ export const SaveState = Object.freeze({
  * The local Set is authoritative while you edit, so a background refresh can
  * never overwrite a stroke you just made.
  */
-export function useAvailabilityDraft({ eventId, session, remoteSlots, onAuthLost }) {
+export function useAvailabilityDraft({
+  eventId,
+  session,
+  remoteSlots,
+  onAuthLost,
+  ensureSession,
+}) {
   const { gateway } = useSystem();
   const [slots, setSlots] = useState(() => new Set(remoteSlots ?? []));
   const [saveState, setSaveState] = useState(SaveState.IDLE);
@@ -30,6 +36,8 @@ export function useAvailabilityDraft({ eventId, session, remoteSlots, onAuthLost
   const timerRef = useRef(null);
   const sessionRef = useRef(session);
   sessionRef.current = session;
+  const ensureRef = useRef(ensureSession);
+  ensureRef.current = ensureSession;
 
   // Adopt the server's copy only when we have nothing unsaved in hand.
   useEffect(() => {
@@ -43,9 +51,11 @@ export function useAvailabilityDraft({ eventId, session, remoteSlots, onAuthLost
 
   const push = useCallback(
     async (next) => {
-      const current = sessionRef.current;
-      if (!current) return;
       try {
+        // Painting is allowed before anyone has identified themselves; the
+        // first save is what actually creates the row.
+        const current = sessionRef.current ?? (await ensureRef.current?.());
+        if (!current) return;
         await gateway.saveAvailability(eventId, current, next);
         if (latestRef.current === next) {
           dirtyRef.current = false;

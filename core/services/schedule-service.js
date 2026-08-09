@@ -1,11 +1,12 @@
 import { ScheduleGateway } from '../ports/schedule-gateway.js';
-import { AuthError, NotFoundError } from '../domain/errors.js';
+import { AuthError, NotFoundError, ValidationError } from '../domain/errors.js';
 import { keepValidSlots, makeEvent } from '../domain/event.js';
 import {
   grantSession,
   hasSession,
   identityKey,
   makeParticipant,
+  nextAnonymousName,
   normalizeName,
   publicParticipant,
 } from '../domain/participant.js';
@@ -82,6 +83,51 @@ export class ScheduleService extends ScheduleGateway {
     await this.#repository.saveParticipant(eventId, participant);
 
     return { token, participant: publicParticipant(participant) };
+  }
+
+  /**
+   * Join without giving a name. Used the moment someone paints a square, so
+   * filling in availability costs nothing up front.
+   *
+   * Identity is a random id rather than the name, which is what lets the label
+   * be changed later and keeps two simultaneous joiners from sharing a row.
+   * They get an animal — "Unnamed Otter" — rather than a number.
+   */
+  async joinAnonymously(eventId) {
+    await this.#requireEvent(eventId);
+    const existing = await this.#repository.listParticipants(eventId);
+
+    const participant = makeParticipant({
+      id: this.#crypto.randomId(16),
+      name: nextAnonymousName(existing),
+      now: this.#now(),
+      anonymous: true,
+    });
+
+    const token = this.#crypto.randomToken();
+    grantSession(participant, this.#crypto.digest(token));
+    await this.#repository.saveParticipant(eventId, participant);
+
+    return { token, participant: publicParticipant(participant) };
+  }
+
+  /**
+   * Put a name to an anonymous row. Only anonymous rows can be renamed: a
+   * named participant's id is derived from their name, so changing it would
+   * strand the record under a key nobody looks up.
+   */
+  async renameParticipant(eventId, credentials, name) {
+    await this.#requireEvent(eventId);
+    const participant = await this.#authenticate(eventId, credentials);
+    if (!participant.anonymous) {
+      throw new ValidationError('Sign out and sign back in to change your name.');
+    }
+
+    participant.name = normalizeName(name);
+    participant.updatedAt = this.#now();
+    await this.#repository.saveParticipant(eventId, participant);
+
+    return { participant: publicParticipant(participant) };
   }
 
   async saveAvailability(eventId, credentials, slots) {

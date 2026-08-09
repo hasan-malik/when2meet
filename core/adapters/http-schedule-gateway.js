@@ -34,6 +34,18 @@ export class HttpScheduleGateway extends ScheduleGateway {
     });
   }
 
+  async joinAnonymously(eventId) {
+    return this.#send('POST', `/events/${encodeURIComponent(eventId)}/join`, {});
+  }
+
+  async renameParticipant(eventId, { participantId, token }, name) {
+    return this.#send('POST', `/events/${encodeURIComponent(eventId)}/rename`, {
+      participantId,
+      token,
+      name,
+    });
+  }
+
   async saveAvailability(eventId, { participantId, token }, slots) {
     return this.#send('PUT', `/events/${encodeURIComponent(eventId)}/availability`, {
       participantId,

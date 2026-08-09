@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 /** Name + optional password. That's the whole account system. */
-export default function SignInForm({ onSubmit }) {
+export default function SignInForm({ onSubmit, submitLabel = 'Continue' }) {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -55,7 +55,7 @@ export default function SignInForm({ onSubmit }) {
       )}
 
       <button className="btn btn-filled btn-block" disabled={!name.trim() || busy}>
-        {busy ? 'Signing in…' : 'Continue'}
+        {busy ? 'Saving…' : submitLabel}
       </button>
     </form>
   );

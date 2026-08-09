@@ -74,6 +74,10 @@ async function route(req, [resource, eventId, action]) {
   switch (`${req.method} ${action}`) {
     case 'POST signin':
       return json(await api.signIn(eventId, body));
+    case 'POST join':
+      return json(await api.joinAnonymously(eventId));
+    case 'POST rename':
+      return json(await api.renameParticipant(eventId, body, body.name));
     case 'PUT availability':
       return json(await api.saveAvailability(eventId, body, body.slots));
     case 'POST leave':
