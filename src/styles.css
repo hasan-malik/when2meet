@@ -560,6 +560,16 @@ select {
   gap: 12px;
   flex-wrap: wrap;
   padding: 0 4px 8px;
+  /* Both panels' heads must agree in height or the grids stop lining up,
+     and only this one carries buttons — 45px is what those come to. */
+  min-height: 45px;
+}
+
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .toolbar {
@@ -642,15 +652,14 @@ select {
 
 /* --- readout ----------------------------------------------------------- */
 .panel-note {
-  background: var(--fill);
-  border-radius: 10px;
-  padding: 11px 13px;
-  margin-bottom: 12px;
+  padding: 0 2px;
+  margin-bottom: 10px;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--label-secondary);
-  /* Fixed height on both panels is what keeps the two grids level. */
-  min-height: 54px;
+  /* Plain text, but still a fixed height: it is what keeps the two grids
+     level, since only one panel's note ever changes. */
+  min-height: 20px;
 }
 
 .readout-tag {

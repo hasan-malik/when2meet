@@ -185,13 +185,26 @@ export default function EventPage() {
         <section>
           <div className="panel-head">
             <h2 className="panel-title">Your availability</h2>
-            <SaveBadge state={draft.saveState} />
+            <div className="panel-head-actions">
+              <button className="btn btn-sm" onClick={() => bulkCommit(new Set(projection.slots))}>
+                Select all
+              </button>
+              <button className="btn btn-sm" onClick={() => bulkCommit(new Set())}>
+                Clear
+              </button>
+              {undoTo && (
+                <button className="btn btn-sm btn-undo" onClick={undo}>
+                  Undo
+                </button>
+              )}
+              <SaveBadge state={draft.saveState} />
+            </div>
           </div>
           <div className="panel-body">
             <div className="panel-note">
               {session
-                ? `Saving as ${session.name}. Drag to paint when you're free — it saves as you go.`
-                : "Drag to paint when you're free. No sign-in needed — your first square saves you in."}
+                ? `Saving as ${session.name}. Click and Drag to Toggle; Saved Immediately`
+                : 'Click and Drag to Toggle; Saved Immediately'}
             </div>
 
             {hovered && (
@@ -238,23 +251,6 @@ export default function EventPage() {
             />
 
             <div className="toolbar">
-              <button
-                className="btn btn-sm"
-                onClick={() => bulkCommit(new Set(projection.slots))}
-              >
-                Select all
-              </button>
-              <button className="btn btn-sm" onClick={() => bulkCommit(new Set())}>
-                Clear
-              </button>
-              {undoTo && (
-                <button className="btn btn-sm btn-undo" onClick={undo}>
-                  Undo
-                </button>
-              )}
-
-              <span className="toolbar-gap" />
-
               {(!session || session.anonymous) && (
                 <button className="btn btn-sm" onClick={() => setNaming((open) => !open)}>
                   {naming ? 'Cancel' : 'Add your name'}
@@ -286,9 +282,7 @@ export default function EventPage() {
           </div>
           <div className="panel-body">
             <div className="panel-note">
-              {total
-                ? 'Hover a square to see who can make it, over on the left. This grid is read only — yours is on the left too.'
-                : 'Nobody has answered yet. Share the link above.'}
+              Mouseover the Calendar to see who's available
             </div>
 
             <GroupHeatmap
