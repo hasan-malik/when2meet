@@ -6,7 +6,11 @@ import { isDateKey, makeSlotId, MINUTES_PER_DAY } from './slot.js';
  * Pure data plus the rules that decide whether a value is a legal slot.
  */
 
-export const SLOT_SIZES = Object.freeze([15, 30, 60]);
+/**
+ * Fixed at 15 minutes, matching When2Meet. Not configurable — one less
+ * decision when creating an event, and one less variable everywhere else.
+ */
+export const SLOT_MINUTES = 15;
 
 export const MAX_DATES = 60;
 export const MAX_EVENT_NAME = 120;
@@ -75,9 +79,6 @@ export function makeEvent(input, { id, now = Date.now() }) {
   if (endMinute <= startMinute)
     throw new ValidationError('The end time must be after the start time.');
 
-  const slotMinutes = Number(input?.slotMinutes ?? 30);
-  if (!SLOT_SIZES.includes(slotMinutes)) throw new ValidationError('Unsupported slot length.');
-
   return Object.freeze({
     id,
     name,
@@ -85,7 +86,7 @@ export function makeEvent(input, { id, now = Date.now() }) {
     dates: rawDates.sort(),
     startMinute,
     endMinute,
-    slotMinutes,
+    slotMinutes: SLOT_MINUTES,
     createdAt: now,
   });
 }
@@ -94,12 +95,14 @@ function toMinute(value, label) {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 0 || n > MINUTES_PER_DAY)
     throw new ValidationError(`Invalid ${label}.`);
+  if (n % SLOT_MINUTES !== 0)
+    throw new ValidationError(`The ${label} must land on a ${SLOT_MINUTES} minute boundary.`);
   return n;
 }
 
 /** Every offered slot, ascending. */
 export function eventSlots(event) {
-  const step = event.slotMinutes;
+  const step = event.slotMinutes ?? SLOT_MINUTES;
   const slots = [];
   for (const date of event.dates) {
     for (let m = event.startMinute; m < event.endMinute; m += step) {
@@ -121,4 +124,4 @@ export function keepValidSlots(event, slots) {
 }
 
 /** Distance between adjacent slots, in slot-id units. */
-export const slotStep = (event) => event.slotMinutes;
+export const slotStep = (event) => event.slotMinutes ?? SLOT_MINUTES;

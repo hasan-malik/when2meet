@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar.jsx';
 import WeekdayPicker from '../components/WeekdayPicker.jsx';
 import { useSystem } from '../system/SystemProvider.jsx';
-import { EventMode, SLOT_SIZES } from '../../core/index.js';
+import { EventMode } from '../../core/index.js';
 import { formatMinuteOfDay } from '../format.js';
 
+// Half-hour bounds are plenty for choosing a range; the grid itself is
+// 15-minute, matching When2Meet.
 const TIME_OPTIONS = Array.from({ length: 49 }, (_, i) => i * 30);
 
 export default function CreateEvent() {
@@ -19,7 +21,6 @@ export default function CreateEvent() {
   const [weekdays, setWeekdays] = useState(() => new Set());
   const [startMinute, setStartMinute] = useState(9 * 60);
   const [endMinute, setEndMinute] = useState(17 * 60);
-  const [slotMinutes, setSlotMinutes] = useState(30);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,7 +41,6 @@ export default function CreateEvent() {
         dates: sorted,
         startMinute,
         endMinute,
-        slotMinutes,
       });
       navigate(`/e/${event.id}`);
     } catch (err) {
@@ -158,21 +158,9 @@ export default function CreateEvent() {
                 </select>
               </div>
 
-              <div className="row">
-                <span className="row-label">Slots</span>
-                <div className="segmented">
-                  {SLOT_SIZES.map((size) => (
-                    <button
-                      type="button"
-                      key={size}
-                      aria-pressed={slotMinutes === size}
-                      onClick={() => setSlotMinutes(size)}
-                    >
-                      {size === 60 ? '1 hr' : `${size} min`}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            </div>
+            <div className="group-footer">
+              The grid runs in 15 minute steps.
             </div>
           </div>
 
