@@ -156,45 +156,6 @@ select {
   font-weight: 500;
 }
 
-/* --- brand ------------------------------------------------------------- */
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-weight: 600;
-  color: var(--label);
-  text-decoration: none;
-}
-
-.brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: linear-gradient(180deg, var(--green), var(--green-deep));
-  position: relative;
-  flex: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-}
-
-.brand-mark::before,
-.brand-mark::after {
-  content: '';
-  position: absolute;
-  background: #fff;
-  border-radius: 1.5px;
-}
-
-.brand-mark::before {
-  inset: 7px 13px 11px 6px;
-  box-shadow: 7px 0 0 rgba(255, 255, 255, 0.55);
-}
-
-.brand-mark::after {
-  inset: 12px 13px 6px 6px;
-  opacity: 0.55;
-  box-shadow: 7px 0 0 #fff;
-}
-
 /* --- inset grouped list ------------------------------------------------ */
 .group {
   margin-bottom: 26px;

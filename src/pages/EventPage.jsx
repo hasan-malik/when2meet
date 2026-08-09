@@ -129,7 +129,7 @@ export default function EventPage() {
         <Link to="/" className="back-link">
           New
         </Link>
-        <span className="brand-mark" aria-hidden="true" />
+        <span className="navbar-title">Freetime</span>
       </div>
 
       <h1 className="event-title">{event.name}</h1>

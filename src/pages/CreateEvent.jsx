@@ -52,15 +52,11 @@ export default function CreateEvent() {
   return (
     <div className="page page-create">
       <div className="navbar">
-        <span className="brand">
-          <span className="brand-mark" aria-hidden="true" />
-          <span className="navbar-title">When2Meet</span>
-        </span>
+        <span className="navbar-title">Freetime</span>
       </div>
 
       <div className="create-head">
         <h1 className="large-title">New event</h1>
-        <p className="subtitle">Pick your dates, share the link, see when everyone is free.</p>
       </div>
 
       <form className="create-layout" onSubmit={submit}>
@@ -122,7 +118,6 @@ export default function CreateEvent() {
 
         <div className="create-col">
           <div className="group">
-            <div className="group-header">What times might work?</div>
             <div className="group-body">
               <div className="row">
                 <span className="row-label">No earlier than</span>
@@ -159,9 +154,6 @@ export default function CreateEvent() {
               </div>
 
             </div>
-            <div className="group-footer">
-              The grid runs in 15 minute steps.
-            </div>
           </div>
 
           <div className="create-actions">
@@ -170,7 +162,7 @@ export default function CreateEvent() {
               {busy ? 'Creating…' : 'Create event'}
             </button>
             <p className="group-footer create-note">
-              No account needed — anyone with the link can add their availability.
+              No account needed.
             </p>
           </div>
         </div>
