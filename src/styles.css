@@ -28,6 +28,7 @@
   --radius-control: 12px;
   --cell-h: 15px;
   --label-w: 60px;
+  --col-min: 44px;
 
   /* Availability ramp base (systemGreen) */
   --heat: 52, 199, 89;
@@ -696,8 +697,8 @@ select {
 
 .grid {
   display: grid;
-  grid-template-columns: var(--label-w) repeat(var(--col-count), minmax(44px, 1fr));
-  gap: 0 4px;
+  grid-template-columns: var(--label-w) repeat(var(--col-count), minmax(var(--col-min), 1fr));
+  gap: 0 var(--col-gap, 4px);
   min-width: min-content;
   user-select: none;
   -webkit-user-select: none;
@@ -946,8 +947,14 @@ select {
     grid-template-columns: 1fr;
   }
   :root {
-    --cell-h: 19px;
-    --label-w: 56px;
+    /* A single full-width grid can afford taller rows, which matters when the
+       target is a fingertip rather than a cursor. */
+    --cell-h: 22px;
+    /* Tightened so a seven day week fits a 393px screen without the grid
+       scrolling sideways inside its panel, which is easy to miss. */
+    --label-w: 44px;
+    --col-min: 36px;
+    --col-gap: 2px;
   }
 }
 
@@ -1155,4 +1162,57 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .alert-backdrop,
   .alert { animation: none; }
+}
+
+/* ==========================================================================
+   Phone layout. Everything below is inside the breakpoint, so the desktop
+   rendering is untouched.
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* One grid at a time, chosen here. */
+  .mobile-switch {
+    display: flex;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .mobile-switch button {
+    flex: 1;
+    padding: 9px 12px;
+    font-size: 15px;
+  }
+
+  /* Who is free, in the panel you are actually looking at. */
+  .tap-readout {
+    background: var(--fill);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    min-height: 76px;
+  }
+
+  .tap-readout-time {
+    font-weight: 650;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .tap-readout-line {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin-top: 3px;
+  }
+
+  /* Seven columns on a 393px screen leaves roughly 48px each, which the month
+     will not fit into. The weekday and day number carry it. */
+  .colhead-month {
+    display: none;
+  }
+
+  .colhead-date {
+    font-size: 14px;
+  }
 }

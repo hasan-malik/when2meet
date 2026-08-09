@@ -5,6 +5,7 @@ import GroupHeatmap from '../components/GroupHeatmap.jsx';
 import ShareBar from '../components/ShareBar.jsx';
 import SignInForm from '../components/SignInForm.jsx';
 import { useEventData } from '../hooks/useEventData.js';
+import { useIsMobile } from '../hooks/useIsMobile.js';
 import { useParticipantSession } from '../hooks/useParticipantSession.js';
 import { SaveState, useAvailabilityDraft } from '../hooks/useAvailabilityDraft.js';
 import {
@@ -27,6 +28,9 @@ export default function EventPage() {
 
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
   const [naming, setNaming] = useState(false);
+  const isMobile = useIsMobile();
+  // A phone shows one grid at a time: no room for two, and no hover either.
+  const [mobileView, setMobileView] = useState('you');
 
   // Mirrors the draft's save state. It lives up here because useEventData
   // below reads it, and the draft itself cannot be created until that fetch
@@ -132,29 +136,7 @@ export default function EventPage() {
 
   const total = people.length;
 
-  return (
-    <div className="page page-wide">
-      <div className="navbar">
-        <Link to="/" className="back-link">
-          <svg className="back-chevron" viewBox="0 0 12 20" aria-hidden="true">
-            <path
-              d="M10.5 1.75 2.25 10l8.25 8.25"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          New
-        </Link>
-        <h1 className="navbar-heading">{event.name || UNTITLED}</h1>
-        <span className="navbar-title">pickatime</span>
-      </div>
-
-      <ShareBar />
-
-      <div className="event-layout">
+  const youPanel = (
         <section>
           <div className="panel-head">
             <h2 className="panel-title">Your availability</h2>
@@ -178,7 +160,7 @@ export default function EventPage() {
                 : 'Click and Drag to Toggle; Saved Immediately'}
             </div>
 
-            {hovered && (
+            {hovered && !isMobile && (
               <div className="hover-panel">
                 <div className="hover-panel-time">
                   {formatWindow(
@@ -245,7 +227,9 @@ export default function EventPage() {
             </div>
           )}
         </section>
+  );
 
+  const everyonePanel = (
         <section>
           <div className="panel-head">
             <h2 className="panel-title">Everyone</h2>
@@ -257,8 +241,40 @@ export default function EventPage() {
           </div>
           <div className="panel-body">
             <div className="panel-note">
-              Mouseover the Calendar to see who's available
+              {isMobile
+                ? 'Tap a square to see who can make it'
+                : "Mouseover the Calendar to see who's available"}
             </div>
+
+            {isMobile && (
+              <div className="tap-readout">
+                {hovered ? (
+                  <>
+                    <div className="tap-readout-time">
+                      {formatWindow(
+                        hoveredSlot,
+                        slotMinuteOfDay(hoveredSlot) + slotStep(event),
+                        { weekdaysOnly },
+                      )}
+                    </div>
+                    <div className="tap-readout-line">
+                      <span className="readout-tag available">
+                        Free {hovered.available.length}
+                      </span>
+                      <span>{hovered.available.map((p) => p.name).join(', ') || 'Nobody'}</span>
+                    </div>
+                    <div className="tap-readout-line">
+                      <span className="readout-tag">Busy {hovered.unavailable.length}</span>
+                      <span className="muted">
+                        {hovered.unavailable.map((p) => p.name).join(', ') || 'Nobody'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <span className="muted">No square selected</span>
+                )}
+              </div>
+            )}
 
             <GroupHeatmap
               projection={projection}
@@ -266,10 +282,60 @@ export default function EventPage() {
               total={total}
               onHoverSlot={setHoveredSlot}
               weekdaysOnly={weekdaysOnly}
+              tapToSelect={isMobile}
             />
           </div>
         </section>
+  );
+
+  return (
+    <div className="page page-wide">
+      <div className="navbar">
+        <Link to="/" className="back-link">
+          <svg className="back-chevron" viewBox="0 0 12 20" aria-hidden="true">
+            <path
+              d="M10.5 1.75 2.25 10l8.25 8.25"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          New
+        </Link>
+        <h1 className="navbar-heading">{event.name || UNTITLED}</h1>
+        <span className="navbar-title">pickatime</span>
       </div>
+
+      <ShareBar />
+
+      {isMobile ? (
+        <>
+          <div className="segmented mobile-switch">
+            <button
+              type="button"
+              aria-pressed={mobileView === 'you'}
+              onClick={() => setMobileView('you')}
+            >
+              You
+            </button>
+            <button
+              type="button"
+              aria-pressed={mobileView === 'everyone'}
+              onClick={() => setMobileView('everyone')}
+            >
+              Everyone
+            </button>
+          </div>
+          {mobileView === 'you' ? youPanel : everyonePanel}
+        </>
+      ) : (
+        <div className="event-layout">
+          {youPanel}
+          {everyonePanel}
+        </div>
+      )}
 
     </div>
   );

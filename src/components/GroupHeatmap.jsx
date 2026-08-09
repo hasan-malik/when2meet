@@ -9,6 +9,7 @@ export default function GroupHeatmap({
   total,
   onHoverSlot,
   weekdaysOnly,
+  tapToSelect = false,
 }) {
   const containerRef = useRef(null);
 
@@ -34,14 +35,19 @@ export default function GroupHeatmap({
     [projection, onHoverSlot],
   );
 
+  // Touch has no hover, so on a phone a tap picks the square and it stays
+  // picked until another one is tapped.
+  const pointing = tapToSelect
+    ? { onPointerDown: handleMove }
+    : { onPointerMove: handleMove, onPointerLeave: () => onHoverSlot(undefined) };
+
   return (
     <ScheduleGrid
       ref={containerRef}
       projection={projection}
       cellProps={cellProps}
       weekdaysOnly={weekdaysOnly}
-      onPointerMove={handleMove}
-      onPointerLeave={() => onHoverSlot(undefined)}
+      {...pointing}
     />
   );
 }

@@ -43,7 +43,8 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
                 <>
                   <span className="colhead-weekday">{weekday}</span>
                   <span className="colhead-date">
-                    {month} {day}
+                    <span className="colhead-month">{month} </span>
+                    {day}
                   </span>
                 </>
               )}
