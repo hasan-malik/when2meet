@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import AvailabilityEditor from '../components/AvailabilityEditor.jsx';
 import GroupHeatmap from '../components/GroupHeatmap.jsx';
@@ -20,17 +20,23 @@ import { formatWindow, pluralize } from '../format.js';
 // Shown in place of a name the organiser chose not to give.
 const UNTITLED = 'Untitled event';
 
+
 export default function EventPage() {
   const { eventId } = useParams();
   const { session, signIn, joinAnonymously, rename, signOut } = useParticipantSession(eventId);
 
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
-  const [isEditing, setIsEditing] = useState(false);
   const [naming, setNaming] = useState(false);
 
+  // Pausing has to be tied to something that clears itself. An "is editing"
+  // flag latched on and never came back, which silently killed live updates
+  // from a person's first stroke onwards.
+  const saving = draftState === SaveState.SAVING;
   const { status, event, participants, error, reload } = useEventData(eventId, {
-    paused: isEditing,
+    paused: saving,
   });
+
+  const [draftState, setDraftState] = useState(SaveState.IDLE);
 
   const remoteSlots = useMemo(
     () => participants.find((p) => p.id === session?.participantId)?.slots,
@@ -45,13 +51,12 @@ export default function EventPage() {
     ensureSession: joinAnonymously,
   });
 
-  const commit = useCallback(
-    (next) => {
-      setIsEditing(true);
-      draft.commit(next);
-    },
-    [draft],
-  );
+  // Mirrored into state the poll can read without the draft and the fetch
+  // hook having to know about each other.
+  useEffect(() => setDraftState(draft.saveState), [draft.saveState]);
+
+  const commit = draft.commit;
+
 
   // Naming yourself means renaming the row your painting already created, or
   // signing in properly if you have not painted anything yet.
@@ -72,7 +77,6 @@ export default function EventPage() {
   const handleSignOut = useCallback(() => {
     signOut();
     draft.reset([]);
-    setIsEditing(false);
     setNaming(false);
   }, [signOut, draft]);
 
