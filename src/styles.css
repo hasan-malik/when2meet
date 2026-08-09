@@ -105,6 +105,8 @@ select {
 
 /* --- navigation bar / large title -------------------------------------- */
 .navbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -114,11 +116,24 @@ select {
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 0.5px solid transparent;
-  display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   transition: border-color 0.2s;
+}
+
+.navbar .back-link { justify-self: start; }
+.navbar .navbar-title { justify-self: end; }
+
+/* The event's own name, centred in the bar the way iOS titles a screen. */
+.navbar-heading {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
 }
 
 .navbar.scrolled {
@@ -468,13 +483,6 @@ select {
 }
 
 /* --- event page -------------------------------------------------------- */
-.event-title {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  margin-bottom: 3px;
-}
-
 .panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -524,13 +532,14 @@ select {
   gap: 10px;
   background: var(--grouped-surface);
   border-radius: var(--radius-card);
-  padding: 10px 10px 10px 16px;
-  margin-bottom: 22px;
+  padding: 9px 10px 9px 16px;
+  margin: 10px 0 18px;
 }
 
 .share-url {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
   font-size: 15px;
   color: var(--label-secondary);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -579,13 +588,16 @@ select {
 }
 
 /* --- readout ----------------------------------------------------------- */
-.hover-readout {
+.panel-note {
   background: var(--fill);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 11px 13px;
   margin-bottom: 14px;
   font-size: 13px;
-  min-height: 72px;
+  line-height: 1.4;
+  color: var(--label-secondary);
+  /* Fixed height on both panels is what keeps the two grids level. */
+  min-height: 64px;
 }
 
 .readout-time {
@@ -884,9 +896,6 @@ select {
   :root {
     --cell-h: 19px;
     --label-w: 56px;
-  }
-  .event-title {
-    font-size: 24px;
   }
 }
 

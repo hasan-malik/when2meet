@@ -13,14 +13,12 @@ export default function ShareBar() {
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
     } catch {
-      // Clipboard API needs a secure context; fall back to selection.
-      const input = document.getElementById('share-url');
-      input?.select();
+      // Clipboard needs a secure context; fall back to selecting the text.
+      document.getElementById('share-url')?.select();
       document.execCommand?.('copy');
-      setCopied(true);
     }
+    setCopied(true);
   }
 
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
@@ -28,21 +26,25 @@ export default function ShareBar() {
   return (
     <div className="sharebar">
       <span className="sharebar-label">Share this link</span>
-      <div className="sharebar-row">
-        <input id="share-url" className="input input-sm share-input" value={url} readOnly />
-        <button type="button" className="btn btn-primary btn-sm" onClick={copy}>
-          {copied ? 'Copied' : 'Copy'}
+      <input
+        id="share-url"
+        className="share-url"
+        value={url}
+        readOnly
+        onFocus={(e) => e.target.select()}
+      />
+      <button type="button" className="btn btn-filled btn-sm" onClick={copy}>
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+      {canShare && (
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => navigator.share({ url, title: document.title }).catch(() => {})}
+        >
+          Share
         </button>
-        {canShare && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => navigator.share({ url, title: document.title }).catch(() => {})}
-          >
-            Share
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 }

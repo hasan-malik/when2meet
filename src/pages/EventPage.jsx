@@ -15,7 +15,7 @@ import {
   slotStep,
   tallyAvailability,
 } from '../../core/index.js';
-import { formatWindow, pluralize } from '../format.js';
+import { formatWindow } from '../format.js';
 
 // Shown in place of a name the organiser chose not to give.
 const UNTITLED = 'Untitled event';
@@ -165,13 +165,9 @@ export default function EventPage() {
         <Link to="/" className="back-link">
           New
         </Link>
+        <h1 className="navbar-heading">{event.name || UNTITLED}</h1>
         <span className="navbar-title">pickatime</span>
       </div>
-
-      <h1 className="event-title">{event.name || UNTITLED}</h1>
-      <p className="subtitle">
-        {total === 0 ? 'No responses yet' : `${pluralize(total, 'person', 'people')} responded`}
-      </p>
 
       <ShareBar />
 
@@ -182,11 +178,11 @@ export default function EventPage() {
             <SaveBadge state={draft.saveState} />
           </div>
           <div className="panel-body">
-            <p className="panel-hint">
+            <div className="panel-note">
               {session
-                ? `Saving as ${session.name}.`
-                : "Drag to paint when you're free. No sign-in needed — it saves as you go."}
-            </p>
+                ? `Saving as ${session.name}. Drag to paint when you're free — it saves as you go.`
+                : "Drag to paint when you're free. No sign-in needed — your first square saves you in."}
+            </div>
 
             <AvailabilityEditor
               projection={projection}
@@ -243,13 +239,7 @@ export default function EventPage() {
             </div>
           </div>
           <div className="panel-body">
-            {!session && (
-              <p className="panel-hint">
-                This is everyone's answers, and is read only. Add your name on the left to
-                fill in your own.
-              </p>
-            )}
-            <div className="hover-readout">
+            <div className="panel-note">
               {hovered ? (
                 <>
                   <div className="readout-time">
@@ -277,8 +267,8 @@ export default function EventPage() {
               ) : (
                 <span className="muted">
                   {total
-                    ? 'Hover a square to see who can make it.'
-                    : 'Share the link above to start collecting answers.'}
+                    ? 'Hover a square to see who can make it. This grid is read only — yours is on the left.'
+                    : 'Nobody has answered yet. Share the link above.'}
                 </span>
               )}
             </div>
