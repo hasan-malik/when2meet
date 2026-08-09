@@ -165,16 +165,6 @@ export default function EventPage() {
               <button className="btn btn-sm" onClick={() => commit(new Set())}>
                 Clear
               </button>
-              {(!session || session.anonymous) && (
-                <button className="btn btn-sm" onClick={() => setNaming((open) => !open)}>
-                  {naming ? 'Cancel' : 'Add your name'}
-                </button>
-              )}
-              {session && !session.anonymous && (
-                <button className="btn btn-sm btn-destructive" onClick={handleSignOut}>
-                  Sign out
-                </button>
-              )}
               <SaveBadge state={draft.saveState} />
             </div>
           </div>
@@ -228,12 +218,26 @@ export default function EventPage() {
               weekdaysOnly={weekdaysOnly}
             />
 
-            {naming && (
-              <div className="name-form">
-                <SignInForm onSubmit={handleClaimName} submitLabel="Save name" />
-              </div>
+          </div>
+
+          <div className="panel-actions">
+            {(!session || session.anonymous) && (
+              <button className="btn btn-sm" onClick={() => setNaming((open) => !open)}>
+                {naming ? 'Cancel' : 'Add your name'}
+              </button>
+            )}
+            {session && !session.anonymous && (
+              <button className="btn btn-sm btn-destructive" onClick={handleSignOut}>
+                Sign out
+              </button>
             )}
           </div>
+
+          {naming && (
+            <div className="name-form">
+              <SignInForm onSubmit={handleClaimName} submitLabel="Save name" />
+            </div>
+          )}
         </section>
 
         <section>
