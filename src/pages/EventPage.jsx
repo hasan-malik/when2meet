@@ -12,24 +12,16 @@ import {
   EventMode,
   findBestWindows,
   projectSchedule,
-  slotDurationMs,
+  slotMinuteOfDay,
+  slotStep,
   tallyAvailability,
 } from '../../core/index.js';
-import {
-  allTimeZones,
-  formatWindow,
-  localTimeZone,
-  prettyZone,
-  pluralize,
-} from '../format.js';
-
-const TIMEZONES = allTimeZones();
+import { formatWindow, pluralize } from '../format.js';
 
 export default function EventPage() {
   const { eventId } = useParams();
   const { session, signIn, signOut } = useParticipantSession(eventId);
 
-  const [displayTz, setDisplayTz] = useState(localTimeZone);
   const [hoveredSlot, setHoveredSlot] = useState(undefined);
   const [focusedPerson, setFocusedPerson] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -88,13 +80,10 @@ export default function EventPage() {
   }, [participants, session, draft.slots]);
 
   const weekdaysOnly = event?.mode === EventMode.WEEKDAYS;
-  const projection = useMemo(
-    () => (event ? projectSchedule(event, displayTz) : null),
-    [event, displayTz],
-  );
+  const projection = useMemo(() => (event ? projectSchedule(event) : null), [event]);
   const tally = useMemo(() => tallyAvailability(people), [people]);
   const best = useMemo(
-    () => (projection ? findBestWindows(projection.slots, tally, slotDurationMs(event)) : null),
+    () => (projection ? findBestWindows(projection.slots, tally, slotStep(event)) : null),
     [projection, tally, event],
   );
 
@@ -146,19 +135,6 @@ export default function EventPage() {
       <h1 className="event-title">{event.name}</h1>
       <p className="subtitle">
         {total === 0 ? 'No responses yet' : `${pluralize(total, 'person', 'people')} responded`}
-        {' · '}
-        <select
-          className="row-select inline-select"
-          value={displayTz}
-          onChange={(e) => setDisplayTz(e.target.value)}
-          aria-label="Display timezone"
-        >
-          {TIMEZONES.map((tz) => (
-            <option key={tz} value={tz}>
-              {prettyZone(tz)}
-            </option>
-          ))}
-        </select>
       </p>
 
       <ShareBar />
@@ -219,8 +195,7 @@ export default function EventPage() {
                   <div className="readout-time">
                     {formatWindow(
                       hoveredSlot,
-                      hoveredSlot + slotDurationMs(event),
-                      displayTz,
+                      slotMinuteOfDay(hoveredSlot) + slotStep(event),
                       { weekdaysOnly },
                     )}
                   </div>
@@ -305,9 +280,11 @@ export default function EventPage() {
                     <span className="best-rank">{index + 1}</span>
                     <span>
                       <span className="best-when">
-                        {formatWindow(window.start, window.end + best.slotMs, displayTz, {
-                          weekdaysOnly,
-                        })}
+                        {formatWindow(
+                          window.start,
+                          slotMinuteOfDay(window.end) + best.step,
+                          { weekdaysOnly },
+                        )}
                       </span>
                       <span className="best-who">
                         {window.count} of {total} available

@@ -41,8 +41,8 @@ export function attendanceAt(tally, ts, participants) {
 
 /**
  * @typedef {object} TimeWindow
- * @property {number} start first slot's instant
- * @property {number} end   last slot's instant (exclusive end = end + slotMs)
+ * @property {number} start first slot's id
+ * @property {number} end   last slot's id (exclusive end = end + step)
  * @property {number} slots how many slots long
  * @property {number} count how many people are free throughout
  */
@@ -50,16 +50,16 @@ export function attendanceAt(tally, ts, participants) {
 /**
  * Contiguous windows where attendance is highest, longest first.
  *
- * @param {number[]} slots ascending slot instants
+ * @param {number[]} slots ascending slot ids
  * @param {Map<number,string[]>} tally
- * @param {number} slotMs duration of one slot
+ * @param {number} step distance between adjacent slots, in slot-id units
  * @param {number} [limit]
- * @returns {{best:number, windows:TimeWindow[], slotMs:number}}
+ * @returns {{best:number, windows:TimeWindow[], step:number}}
  */
-export function findBestWindows(slots, tally, slotMs, limit = 3) {
+export function findBestWindows(slots, tally, step, limit = 3) {
   let best = 0;
   for (const ts of slots) best = Math.max(best, countAt(tally, ts));
-  if (best === 0) return { best: 0, windows: [], slotMs };
+  if (best === 0) return { best: 0, windows: [], step };
 
   const windows = [];
   let current = null;
@@ -70,7 +70,7 @@ export function findBestWindows(slots, tally, slotMs, limit = 3) {
       current = null;
       continue;
     }
-    const contiguous = current && ts - current.end === slotMs;
+    const contiguous = current && ts - current.end === step;
     if (contiguous) {
       current.end = ts;
       current.slots += 1;
@@ -81,5 +81,5 @@ export function findBestWindows(slots, tally, slotMs, limit = 3) {
   }
 
   windows.sort((a, b) => b.slots - a.slots || a.start - b.start);
-  return { best, windows: windows.slice(0, limit), slotMs };
+  return { best, windows: windows.slice(0, limit), step };
 }

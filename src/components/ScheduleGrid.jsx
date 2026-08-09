@@ -5,6 +5,9 @@ import { formatDateKey, formatMinuteOfDay } from '../format.js';
  * Presentational grid. Renders a `Projection` and nothing more — no selection
  * state, no gestures, no data fetching. Behaviour is layered on by whoever
  * uses it (see AvailabilityEditor and GroupHeatmap).
+ *
+ * Without timezones every column offers exactly the same rows, so the grid is
+ * a plain rectangle: no gaps, no missing cells.
  */
 const ScheduleGrid = forwardRef(function ScheduleGrid(
   {
@@ -17,7 +20,7 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
   },
   ref,
 ) {
-  const { columns, rows, slotAt, rowBreaks } = projection;
+  const { columns, rows, slotAt } = projection;
   const lastRow = rows.length - 1;
 
   return (
@@ -49,25 +52,16 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
         })}
 
         {rows.map((minuteOfDay, row) => {
-          const breaksHere = rowBreaks.has(row);
           const onTheHour = minuteOfDay % 60 === 0;
           return (
             <Fragment key={minuteOfDay}>
-              <div className={`grid-rowlabel${breaksHere ? ' row-break' : ''}`}>
+              <div className="grid-rowlabel">
                 {onTheHour || row === 0 ? formatMinuteOfDay(minuteOfDay, use24h) : ''}
               </div>
 
               {columns.map((dateKey, col) => {
-                const ts = slotAt(col, row);
-                if (ts === undefined) {
-                  return (
-                    <div
-                      key={dateKey}
-                      className={`grid-cell cell-void${breaksHere ? ' row-break' : ''}`}
-                    />
-                  );
-                }
-                const { className = '', style } = cellProps?.(ts) ?? {};
+                const slotId = slotAt(col, row);
+                const { className = '', style } = cellProps?.(slotId) ?? {};
                 return (
                   <div
                     key={dateKey}
@@ -78,9 +72,8 @@ const ScheduleGrid = forwardRef(function ScheduleGrid(
                     className={[
                       'grid-cell',
                       onTheHour ? 'hour-start' : '',
-                      breaksHere ? 'row-break first-row' : '',
                       row === 0 ? 'first-row' : '',
-                      rowBreaks.has(row + 1) || row === lastRow ? 'last-row' : '',
+                      row === lastRow ? 'last-row' : '',
                       className,
                     ]
                       .filter(Boolean)

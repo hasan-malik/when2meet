@@ -25,7 +25,7 @@ export {
   makeEvent,
   eventSlots,
   keepValidSlots,
-  slotDurationMs,
+  slotStep,
 } from './domain/event.js';
 
 export {
@@ -61,14 +61,16 @@ export {
   findBestWindows,
 } from './domain/availability.js';
 
-// Time primitives
+// Slot identity (wall-clock, timezone-free)
 export {
-  isValidTimeZone,
-  tzOffsetMs,
-  zonedWallToUtc,
-  instantToWall,
   isDateKey,
-} from './domain/time.js';
+  dayIndex,
+  dateKeyOf,
+  makeSlotId,
+  slotDateKey,
+  slotMinuteOfDay,
+  weekdayIndex,
+} from './domain/slot.js';
 
 // Errors
 export {

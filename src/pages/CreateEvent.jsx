@@ -4,15 +4,9 @@ import Calendar from '../components/Calendar.jsx';
 import WeekdayPicker from '../components/WeekdayPicker.jsx';
 import { useSystem } from '../system/SystemProvider.jsx';
 import { EventMode, SLOT_SIZES } from '../../core/index.js';
-import {
-  allTimeZones,
-  formatMinuteOfDay,
-  localTimeZone,
-  prettyZone,
-} from '../format.js';
+import { formatMinuteOfDay } from '../format.js';
 
 const TIME_OPTIONS = Array.from({ length: 49 }, (_, i) => i * 30);
-const TIMEZONES = allTimeZones();
 
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -26,7 +20,6 @@ export default function CreateEvent() {
   const [startMinute, setStartMinute] = useState(9 * 60);
   const [endMinute, setEndMinute] = useState(17 * 60);
   const [slotMinutes, setSlotMinutes] = useState(30);
-  const [timezone, setTimezone] = useState(localTimeZone);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,7 +41,6 @@ export default function CreateEvent() {
         startMinute,
         endMinute,
         slotMinutes,
-        timezone,
       });
       navigate(`/e/${event.id}`);
     } catch (err) {
@@ -181,24 +173,6 @@ export default function CreateEvent() {
                   ))}
                 </div>
               </div>
-
-              <div className="row">
-                <span className="row-label">Timezone</span>
-                <select
-                  className="row-select"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                >
-                  {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {prettyZone(tz)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="group-footer">
-              Everyone sees these times in their own timezone.
             </div>
           </div>
 

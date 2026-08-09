@@ -1,5 +1,5 @@
 import { ValidationError } from './errors.js';
-import { isDateKey, isValidTimeZone, zonedWallToUtc } from './time.js';
+import { isDateKey, makeSlotId, MINUTES_PER_DAY } from './slot.js';
 
 /**
  * The Event entity: what times are on offer.
@@ -7,9 +7,10 @@ import { isDateKey, isValidTimeZone, zonedWallToUtc } from './time.js';
  */
 
 export const SLOT_SIZES = Object.freeze([15, 30, 60]);
+
 export const MAX_DATES = 60;
 export const MAX_EVENT_NAME = 120;
-export const MINUTES_PER_DAY = 1440;
+export { MINUTES_PER_DAY };
 
 export const EventMode = Object.freeze({
   DATES: 'dates',
@@ -17,16 +18,10 @@ export const EventMode = Object.freeze({
 });
 
 /**
- * A "days of the week" event has no real dates, but it still has real
- * durations and timezone behaviour. Rather than invent a second slot
- * representation, weekday events are pinned to one canonical week and stay
- * ordinary instants — so tallying, best-times, selection and timezone
- * conversion all work untouched.
- *
- * The anchor week is Mon 1 – Sun 7 January 2024. Early January is chosen
- * because no timezone changes its offset during it, and the days on either
- * side (Sun 31 Dec, Mon 8 Jan) continue the same weekday cycle — so a viewer
- * far enough east or west still sees correct weekday labels.
+ * A "days of the week" event has no real dates, so its days are pinned to one
+ * anchor week. Slots stay ordinary slot ids, which means selection, tallying
+ * and best-times work on weekday events without a single special case.
+ * Mon 1 - Sun 7 January 2024.
  */
 export const WEEKDAY_ANCHOR = Object.freeze([
   '2024-01-01', // Monday
@@ -42,11 +37,12 @@ export const WEEKDAY_ANCHOR = Object.freeze([
  * @typedef {object} Event
  * @property {string}   id
  * @property {string}   name
+ * @property {'dates'|'weekdays'} mode
  * @property {string[]} dates       sorted "YYYY-MM-DD" keys
  * @property {number}   startMinute minutes past midnight, inclusive
  * @property {number}   endMinute   minutes past midnight, exclusive
- * @property {number}   slotMinutes one of SLOT_SIZES
- * @property {string}   timezone    IANA zone the wall-clock times refer to
+ * @property {number}   slotMinutes always SLOT_MINUTES; stored so records are
+ *                                  self-describing
  * @property {number}   createdAt
  */
 
@@ -80,11 +76,7 @@ export function makeEvent(input, { id, now = Date.now() }) {
     throw new ValidationError('The end time must be after the start time.');
 
   const slotMinutes = Number(input?.slotMinutes ?? 30);
-  if (!SLOT_SIZES.includes(slotMinutes))
-    throw new ValidationError('Unsupported slot length.');
-
-  const timezone = String(input?.timezone || 'UTC');
-  if (!isValidTimeZone(timezone)) throw new ValidationError('Unknown timezone.');
+  if (!SLOT_SIZES.includes(slotMinutes)) throw new ValidationError('Unsupported slot length.');
 
   return Object.freeze({
     id,
@@ -94,7 +86,6 @@ export function makeEvent(input, { id, now = Date.now() }) {
     startMinute,
     endMinute,
     slotMinutes,
-    timezone,
     createdAt: now,
   });
 }
@@ -106,26 +97,28 @@ function toMinute(value, label) {
   return n;
 }
 
-/** Every offered slot, as sorted absolute timestamps. */
+/** Every offered slot, ascending. */
 export function eventSlots(event) {
-  const slots = new Set();
+  const step = event.slotMinutes;
+  const slots = [];
   for (const date of event.dates) {
-    for (let m = event.startMinute; m < event.endMinute; m += event.slotMinutes) {
-      slots.add(zonedWallToUtc(date, m, event.timezone));
+    for (let m = event.startMinute; m < event.endMinute; m += step) {
+      slots.push(makeSlotId(date, m));
     }
   }
-  return [...slots].sort((a, b) => a - b);
+  return slots.sort((a, b) => a - b);
 }
 
 /** Discard anything that is not a slot this event actually offers. */
 export function keepValidSlots(event, slots) {
   const offered = new Set(eventSlots(event));
   const cleaned = new Set();
-  for (const ts of Array.isArray(slots) ? slots : []) {
-    const n = Number(ts);
+  for (const slot of Array.isArray(slots) ? slots : []) {
+    const n = Number(slot);
     if (offered.has(n)) cleaned.add(n);
   }
   return [...cleaned].sort((a, b) => a - b);
 }
 
-export const slotDurationMs = (event) => event.slotMinutes * 60000;
+/** Distance between adjacent slots, in slot-id units. */
+export const slotStep = (event) => event.slotMinutes;
