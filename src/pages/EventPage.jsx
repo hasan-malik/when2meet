@@ -162,7 +162,7 @@ export default function EventPage() {
         <Link to="/" className="back-link">
           New
         </Link>
-        <span className="navbar-title">Quorum</span>
+        <span className="navbar-title">pickatime</span>
       </div>
 
       <h1 className="event-title">{event.name || UNTITLED}</h1>

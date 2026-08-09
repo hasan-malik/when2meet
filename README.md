@@ -1,9 +1,9 @@
-# Quorum
+# pickatime
 
 Find a time that works for everyone. Create an event, share the link, drag to
 paint when you're free. No accounts, no install.
 
-Live at **https://getquorum.netlify.app**
+Live at **https://pickatime.netlify.app**
 
 ## Running it
 
