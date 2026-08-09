@@ -1,9 +1,9 @@
-# Freetime
+# Quorum
 
 Find a time that works for everyone. Create an event, share the link, drag to
 paint when you're free. No accounts, no install.
 
-Live at **https://getfreetime.netlify.app**
+Live at **https://getquorum.netlify.app**
 
 ## Running it
 
