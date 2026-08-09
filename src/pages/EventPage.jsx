@@ -18,6 +18,9 @@ import {
 } from '../../core/index.js';
 import { formatWindow, pluralize } from '../format.js';
 
+// Shown in place of a name the organiser chose not to give.
+const UNTITLED = 'Untitled event';
+
 export default function EventPage() {
   const { eventId } = useParams();
   const { session, signIn, signOut } = useParticipantSession(eventId);
@@ -132,7 +135,7 @@ export default function EventPage() {
         <span className="navbar-title">Freetime</span>
       </div>
 
-      <h1 className="event-title">{event.name}</h1>
+      <h1 className="event-title">{event.name || UNTITLED}</h1>
       <p className="subtitle">
         {total === 0 ? 'No responses yet' : `${pluralize(total, 'person', 'people')} responded`}
       </p>

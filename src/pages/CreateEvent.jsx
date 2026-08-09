@@ -29,7 +29,7 @@ export default function CreateEvent() {
   const weekly = mode === EventMode.WEEKDAYS;
   const chosen = weekly ? weekdays : dates;
   const sorted = useMemo(() => [...chosen].sort(), [chosen]);
-  const canSubmit = Boolean(name.trim()) && sorted.length > 0 && endMinute > startMinute;
+  const canSubmit = sorted.length > 0 && endMinute > startMinute;
 
   async function submit(e) {
     e.preventDefault();

@@ -57,8 +57,9 @@ export const WEEKDAY_ANCHOR = Object.freeze([
  * @throws {ValidationError}
  */
 export function makeEvent(input, { id, now = Date.now() }) {
+  // Optional: an unnamed event is still perfectly usable, and the link is
+  // what actually identifies it.
   const name = String(input?.name ?? '').trim();
-  if (!name) throw new ValidationError('Give the event a name.');
   if (name.length > MAX_EVENT_NAME) throw new ValidationError('That event name is too long.');
 
   const mode = input?.mode === EventMode.WEEKDAYS ? EventMode.WEEKDAYS : EventMode.DATES;

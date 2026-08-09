@@ -1,7 +1,9 @@
 import crypto from 'node:crypto';
 import { CryptoProvider } from '../ports/crypto-provider.js';
 
-// Ambiguity-free alphabet for shareable links: no 0/O/1/l/I.
+// Alphabet for shareable links: lowercase, with 0, 1, l and o left out so an
+// id survives being read aloud or retyped. Exactly 32 characters, which is why
+// the `% ID_ALPHABET.length` below is unbiased — 256 divides by 32 evenly.
 const ID_ALPHABET = '23456789abcdefghijkmnpqrstuvwxyz';
 const SCRYPT_KEYLEN = 64;
 
