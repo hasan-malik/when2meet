@@ -142,45 +142,108 @@ export default function EventPage() {
 
       <ShareBar />
 
-      <div className="panels">
-        <section>
-          <div className="panel-head">
-            <h2 className="panel-title">You</h2>
-            {session && <SaveBadge state={draft.saveState} />}
-          </div>
-          <div className="panel-body">
-            {session ? (
-              <>
-                <p className="panel-hint">
-                  Drag to paint when you're free — it saves as you go.
-                </p>
-                <AvailabilityEditor
-                  projection={projection}
-                  selection={draft.slots}
-                  onCommit={commit}
-                  weekdaysOnly={weekdaysOnly}
-                />
-                <div className="toolbar">
-                  <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
-                    Select all
-                  </button>
-                  <button className="btn btn-sm" onClick={() => commit(new Set())}>
-                    Clear
-                  </button>
-                  <button
-                    className="btn btn-sm btn-destructive"
-                    style={{ marginLeft: 'auto' }}
-                    onClick={handleSignOut}
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </>
-            ) : (
-              <SignInForm onSubmit={handleSignIn} />
-            )}
-          </div>
-        </section>
+      <div className="event-layout">
+        <div className="event-col">
+          <section>
+            <div className="panel-head">
+              <h2 className="panel-title">You</h2>
+              {session && <SaveBadge state={draft.saveState} />}
+            </div>
+            <div className="panel-body">
+              {session ? (
+                <>
+                  <p className="panel-hint">
+                    Drag to paint when you're free — it saves as you go.
+                  </p>
+                  <AvailabilityEditor
+                    projection={projection}
+                    selection={draft.slots}
+                    onCommit={commit}
+                    weekdaysOnly={weekdaysOnly}
+                  />
+                  <div className="toolbar">
+                    <button className="btn btn-sm" onClick={() => commit(new Set(projection.slots))}>
+                      Select all
+                    </button>
+                    <button className="btn btn-sm" onClick={() => commit(new Set())}>
+                      Clear
+                    </button>
+                    <button
+                      className="btn btn-sm btn-destructive"
+                      style={{ marginLeft: 'auto' }}
+                      onClick={handleSignOut}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <SignInForm onSubmit={handleSignIn} />
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="panel-head">
+              <h2 className="panel-title">Respondents</h2>
+            </div>
+            <div className="panel-body">
+              {people.length ? (
+                <ul className="people">
+                  {people.map((person) => (
+                    <li key={person.id}>
+                      <button
+                        className={`person${focusedPerson === person.id ? ' active' : ''}`}
+                        onMouseEnter={() => setFocusedPerson(person.id)}
+                        onMouseLeave={() => setFocusedPerson(null)}
+                        onClick={() => setFocusedPerson((c) => (c === person.id ? null : person.id))}
+                      >
+                        <span className="person-name">
+                          {person.name}
+                          {session?.participantId === person.id && <em> · you</em>}
+                        </span>
+                        <span className="person-count">{person.slots.length}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">Nobody has filled this in yet.</p>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="panel-head">
+              <h2 className="panel-title">Best times</h2>
+            </div>
+            <div className="panel-body">
+              {best && best.best > 0 ? (
+                <ol className="best-list">
+                  {best.windows.map((window, index) => (
+                    <li key={window.start}>
+                      <span className="best-rank">{index + 1}</span>
+                      <span>
+                        <span className="best-when">
+                          {formatWindow(
+                            window.start,
+                            slotMinuteOfDay(window.end) + best.step,
+                            { weekdaysOnly },
+                          )}
+                        </span>
+                        <span className="best-who">
+                          {window.count} of {total} available
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="muted">Best times appear once people respond.</p>
+              )}
+            </div>
+          </section>
+        </div>
 
         <section>
           <div className="panel-head">
@@ -192,6 +255,12 @@ export default function EventPage() {
             </div>
           </div>
           <div className="panel-body">
+            {!session && (
+              <p className="panel-hint">
+                This is everyone's answers, and is read only. Add your name on the left to
+                fill in your own.
+              </p>
+            )}
             <div className="hover-readout">
               {hovered ? (
                 <>
@@ -238,70 +307,6 @@ export default function EventPage() {
         </section>
       </div>
 
-      <div className="panels" style={{ marginTop: 22 }}>
-        <section>
-          <div className="panel-head">
-            <h2 className="panel-title">Respondents</h2>
-          </div>
-          <div className="panel-body">
-            {people.length ? (
-              <ul className="people">
-                {people.map((person) => (
-                  <li key={person.id}>
-                    <button
-                      className={`person${focusedPerson === person.id ? ' active' : ''}`}
-                      onMouseEnter={() => setFocusedPerson(person.id)}
-                      onMouseLeave={() => setFocusedPerson(null)}
-                      onClick={() =>
-                        setFocusedPerson((c) => (c === person.id ? null : person.id))
-                      }
-                    >
-                      <span className="person-name">
-                        {person.name}
-                        {session?.participantId === person.id && <em> · you</em>}
-                      </span>
-                      <span className="person-count">{person.slots.length}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">Nobody has filled this in yet.</p>
-            )}
-          </div>
-        </section>
-
-        <section>
-          <div className="panel-head">
-            <h2 className="panel-title">Best times</h2>
-          </div>
-          <div className="panel-body">
-            {best && best.best > 0 ? (
-              <ol className="best-list">
-                {best.windows.map((window, index) => (
-                  <li key={window.start}>
-                    <span className="best-rank">{index + 1}</span>
-                    <span>
-                      <span className="best-when">
-                        {formatWindow(
-                          window.start,
-                          slotMinuteOfDay(window.end) + best.step,
-                          { weekdaysOnly },
-                        )}
-                      </span>
-                      <span className="best-who">
-                        {window.count} of {total} available
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="muted">Best times appear once people respond.</p>
-            )}
-          </div>
-        </section>
-      </div>
     </div>
   );
 }

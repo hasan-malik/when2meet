@@ -988,3 +988,31 @@ select {
     gap: 20px;
   }
 }
+
+/* --- event page layout -------------------------------------------------- */
+.event-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* You, Respondents and Best times share the left column, filling the space
+   the sign-in card leaves empty instead of pushing the page into a scroll. */
+.event-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* The group grid is a read-only heatmap; don't imply it can be painted. */
+.grid:not(.grid-editable) {
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .event-layout {
+    grid-template-columns: 1fr;
+  }
+}
